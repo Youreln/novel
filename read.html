@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>云笺 · 小说编辑上传工具</title>
+<style>
+:root{
+    --bg:#f5f7fa;--card:#ffffff;--text:#222;--sub:#666;
+    --border:#dddddd;--accent:#3b82f6;--glass-blur:12px;
+}
+[data-theme="dark"]{
+    --bg:#121212;--card:#1c1c1e;--text:#eeee;--sub:#aaaa;
+    --border:#333333;--accent:#60a5fa;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system}
+body{background:var(--bg);color:var(--text);padding:20px;min-height:100vh;transition:0.3s}
+.container{max-width:1100px;margin:0 auto}
+.card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:24px;margin-bottom:22px;backdrop-filter:blur(var(--glass-blur));
+    box-shadow:0 6px 24px rgba(0,0,0,0.06);
+}
+h2{margin-bottom:16px;font-size:1.35rem;font-weight:600}
+label{display:block;margin:12px 0 6px;color:var(--sub);font-size:0.92rem}
+input,select{
+    width:100%;padding:11px 14px;border:1px solid var(--border);
+    border-radius:10px;background:transparent;color:var(--text);font-size:1rem
+}
+.toolbar{
+    display:flex;flex-wrap:wrap;gap:6px;padding:12px;border:1px solid var(--border);
+    border-radius:12px;margin-bottom:14px;background:transparent
+}
+.toolbar button{
+    padding:7px 11px;border:1px solid var(--border);border-radius:8px;
+    background:transparent;color:var(--text);cursor:pointer;font-size:0.9rem;
+    transition:0.2s
+}
+.toolbar button:hover{background:rgba(59,130,246,0.1);border-color:var(--accent)}
+#content{
+    width:100%;min-height:360px;padding:14px;border:1px solid var(--border);
+    border-radius:12px;background:transparent;color:var(--text);resize:vertical;
+    font-size:1rem;line-height:1.7;white-space:pre-wrap;outline:none
+}
+.preview-box{
+    margin-top:14px;padding:16px;border:1px solid var(--border);border-radius:12px;
+    min-height:200px;
+}
+.preview-box h1{font-size:2rem;margin:12px 0}
+.preview-box h2{font-size:1.6rem;margin:10px 0}
+.preview-box h3{font-size:1.3rem;margin:8px 0}
+.preview-box p{margin:6px 0;line-height:1.7}
+.preview-box strong{font-weight:bold}
+.preview-box em{font-style:italic}
+.preview-box del{text-decoration:line-through}
+.preview-box u{text-decoration:underline}
+
+.btn-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.btn-blue{padding:11px 22px;background:var(--accent);color:#fff;border:none;border-radius:10px;cursor:pointer}
+.btn-gray{padding:11px 22px;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:10px;cursor:pointer}
+.btn-red{padding:11px 22px;background:#ef4444;color:#fff;border:none;border-radius:10px;cursor:pointer}
+.status{margin-top:16px;padding:12px;border-radius:10px;font-size:0.92rem}
+.success{background:#dcfce7;color:#166534}
+.error{background:#fee2e2;color:#991b1b}
+.hide{display:none}
+.bottom-link{
+    text-align:center;margin-top:24px;padding:16px;
+}
+.bottom-link .visit-btn{
+    display:inline-block;padding:10px 24px;background:var(--accent);color:#fff;
+    text-decoration:none;border-radius:10px;margin-bottom:10px
+}
+.source-desc{text-align:center;margin-top:10px;color:var(--sub);font-size:0.9rem}
+.source-desc a{color:var(--accent);text-decoration:none}
+.sort-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+    margin:6px 0;gap:10px;
+}
+.sort-item .name{flex:1}
+.sort-item button{padding:4px 10px;font-size:0.8rem}
+#sortList{margin-top:12px;max-height:320px;overflow-y:auto}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body data-theme="light">
+<div class="container">
+    <div class="card">
+        <h2>仓库小说管理</h2>
+        <div class="btn-group">
+            <button class="btn-gray" onclick="loadNovelList()">刷新仓库小说列表</button>
+            <button class="btn-blue" onclick="createNewNovel()">新建空白小说</button>
+            <button class="btn-gray" onclick="openSortPanel()">打开书架排序管理</button>
+        </div>
+        <label>选择已有小说修改/删除</label>
+        <select id="novelSelect">
+            <option value="">-- 刷新列表后选择文件 --</option>
+        </select>
+        <div class="btn-group">
+            <button class="btn-gray" onclick="loadSelectedNovel()">载入选中文件（自动识别标题/作者）</button>
+            <button class="btn-red" onclick="deleteSelectedNovel()">永久删除选中文件</button>
+        </div>
+    </div>
+
+    <div class="card" id="sortPanel" style="display:none;">
+        <h2>书架自定义排序管理</h2>
+        <div class="btn-group">
+            <button class="btn-gray" onclick="loadSortConfig()">读取当前排序配置</button>
+            <button class="btn-blue" onclick="syncSortWithFolder()">一键同步仓库所有文件（保留原有顺序+新增尾部+清理失效）</button>
+            <button class="btn-red" onclick="saveSortConfig()">保存排序并上传sort.json</button>
+        </div>
+        <p class="tip">拖动条目/上下按钮调整顺序，同步会自动新增文件、清理已删除文件</p>
+        <div id="sortList"></div>
+    </div>
+
+    <div class="card">
+        <h2>文件基础信息（载入文件自动填充）</h2>
+        <label>文件名</label>
+        <input id="fileName" placeholder="示例：晚风寄星河，梧萌赴山海.md">
+        <label>小说标题（自动读取ZW_META）</label>
+        <input id="novelTitle" placeholder="自动识别标题">
+        <label>作者（自动读取ZW_META）</label>
+        <input id="novelAuthor" placeholder="自动识别作者">
+        <label>提交更新备注</label>
+        <input id="commitMsg" value="更新文件内容">
+    </div>
+
+    <div class="card">
+        <h2>富文本编辑器（云笺 Cloudpad）</h2>
+        <div class="toolbar">
+            <button onclick="formatBold()">加粗</button>
+            <button onclick="formatItalic()">斜体</button>
+            <button onclick="formatUnderline()">下划线</button>
+            <button onclick="formatStrike()">删除线</button>
+            <button onclick="formatH1()">H1</button>
+            <button onclick="formatH2()">H2</button>
+            <button onclick="formatH3()">H3</button>
+            <button onclick="listOrder()">有序列表</button>
+            <button onclick="listUnorder()">无序列表</button>
+            <button onclick="alignLeft()">左对齐</button>
+            <button onclick="alignCenter()">居中</button>
+            <button onclick="alignRight()">右对齐</button>
+            <button onclick="clearFormat()">清除格式</button>
+            <button onclick="clearBlankLine()">去空行</button>
+            <button onclick="clearSpace()">去多余空格</button>
+            <button onclick="halfFull()">全半角转换</button>
+            <button onclick="punctSwap()">标点互换</button>
+            <button onclick="upperLower()">大小写转换</button>
+            <button onclick="fanJian()">繁简互换</button>
+            <button onclick="findReplace()">查找替换</button>
+            <button onclick="copyPure()">复制纯文本</button>
+            <button onclick="exportTxt()">下载本地文件</button>
+            <button onclick="clearAll()">清空编辑器</button>
+        </div>
+        <textarea id="content" placeholder="在这里创作、修改文件..." oninput="updatePreview()"></textarea>
+
+        <h3 style="margin-top:16px;">实时排版预览（H1/H2/H3标题可见）</h3>
+        <div class="preview-box" id="previewBox"></div>
+
+        <div class="btn-group" style="margin-top:20px;">
+            <button class="btn-blue" onclick="uploadToGithub()">保存更新至GitHub仓库novel文件夹</button>
+        </div>
+        <div id="statusBox" class="status hide"></div>
+    </div>
+
+    <div class="bottom-link">
+        <a class="visit-btn" href="https://youreln.github.io/novel/" target="_blank">前往中梧小说阅读站</a>
+        <div class="source-desc">编辑器技术来源：<a href="https://youreln.github.io/Cloudpad/" target="_blank">云笺@Youreln开发</a></div>
+    </div>
+</div>
+
+<script>
+const GH_CONFIG = {
+    user: "Youreln",
+    repo: "novel",
+    token: "你的PAT细粒度" // 替换为有效PAT
+};
+const GH_API = "https://api.github.com";
+let currentFileSha = null;
+let currentSortOrder = [];
+const statusBox = document.getElementById("statusBox");
+const novelSelect = document.getElementById("novelSelect");
+const contentArea = document.getElementById("content");
+const previewBox = document.getElementById("previewBox");
+const titleInput = document.getElementById("novelTitle");
+const authorInput = document.getElementById("novelAuthor");
+const fileNameInput = document.getElementById("fileName");
+const commitMsgInput = document.getElementById("commitMsg");
+const sortPanel = document.getElementById("sortPanel");
+const sortListEl = document.getElementById("sortList");
+
+function showStatus(text,type="success"){
+    statusBox.className = "status " + type;
+    statusBox.classList.remove("hide");
+    statusBox.innerText = text;
+    // 3秒后自动隐藏提示
+    setTimeout(() => {
+        statusBox.classList.add("hide");
+    }, 3000);
+}
+
+function updatePreview(){
+    previewBox.innerHTML = marked.parse(contentArea.value);
+}
+
+function parseMeta(text){
+    const reg = /<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->/;
+    const match = text.match(reg);
+    if(!match) return null;
+    try{
+        return JSON.parse(match[1]);
+    }catch(e){
+        return null;
+    }
+}
+function stripMetaComment(rawText){
+    return rawText.replace(/<!--\s*ZW_META:[\s\S]*?-->\s*\n*/g,"");
+}
+
+function createNewNovel(){
+    currentFileSha = null;
+    fileNameInput.value = "";
+    titleInput.value = "";
+    authorInput.value = "";
+    contentArea.value = "";
+    commitMsgInput.value = "新建文件";
+    novelSelect.value = "";
+    updatePreview();
+    showStatus("已清空表单，可以开始新建文件");
+}
+
+// 【修改1】打开排序面板时自动加载文件列表+排序配置
+async function openSortPanel(){
+    sortPanel.style.display = sortPanel.style.display === "none" ? "block" : "none";
+    if (sortPanel.style.display === "block") {
+        // 先加载排序配置，再同步文件列表（确保无配置时也能显示所有文件）
+        await loadSortConfig();
+        await syncSortWithFolder();
+    }
+}
+
+// 核心方法：读取novel目录下所有文件（仅过滤文件夹）
+async function getAllNovelFiles(){
+    const url = `${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/novel`;
+    try {
+        const res = await fetch(url,{
+            headers:{Authorization:`Bearer ${GH_CONFIG.token}`,"Accept":"application/vnd.github+json"}
+        });
+        if(!res.ok) throw new Error(`接口返回错误：${res.status}`);
+        const list = await res.json();
+        // 过滤文件夹，保留所有文件（兼容特殊字符文件名）
+        const files = list.filter(item => item.type === "file").map(v => decodeURIComponent(v.name));
+        // 排除sort.json本身（避免排序列表显示配置文件）
+        return files.filter(name => name !== "sort.json");
+    } catch (e) {
+        showStatus(`读取文件列表失败：${e.message}`, "error");
+        return [];
+    }
+}
+
+// 【修改2】优化排序配置加载逻辑，无配置时初始化空数组
+async function loadSortConfig(){
+    statusBox.classList.add("hide");
+    try{
+        const url = `${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/novel/sort.json`;
+        const res = await fetch(url,{
+            headers:{Authorization:`Bearer ${GH_CONFIG.token}`,"Accept":"application/vnd.github+json"}
+        });
+        if(!res.ok) {
+            // 无配置文件时初始化空数组，不报错
+            currentSortOrder = [];
+            showStatus("未检测到sort.json，将使用仓库文件列表初始化", "error");
+            return;
+        }
+        const data = await res.json();
+        // 兼容Base64解码异常
+        let raw = "";
+        try {
+            raw = decodeURIComponent(escape(atob(data.content)));
+        } catch (e) {
+            raw = atob(data.content);
+        }
+        const cfg = JSON.parse(raw);
+        // 确保order是数组类型
+        currentSortOrder = Array.isArray(cfg.order) ? cfg.order.map(name => decodeURIComponent(name)) : [];
+        renderSortList();
+        showStatus("已读取现有排序配置");
+    }catch(e){
+        currentSortOrder = [];
+        renderSortList();
+        showStatus(`加载排序配置失败：${e.message}，将使用仓库文件列表初始化`, "error");
+    }
+}
+
+// 【修改3】优化同步逻辑，确保所有文件都能显示
+async function syncSortWithFolder(){
+    statusBox.classList.add("hide");
+    try {
+        const allFiles = await getAllNovelFiles();
+        if (allFiles.length === 0) {
+            showStatus("仓库novel目录下无文件", "error");
+            currentSortOrder = [];
+            renderSortList();
+            return;
+        }
+        const newOrder = [];
+        // 1. 保留原有排序中仍存在的文件（去重）
+        currentSortOrder.forEach(name=>{
+            const decodedName = decodeURIComponent(name);
+            if(allFiles.includes(decodedName) && !newOrder.includes(decodedName)) {
+                newOrder.push(decodedName);
+            }
+        });
+        // 2. 追加所有不在排序里的文件（确保无遗漏）
+        allFiles.forEach(name=>{
+            if(!newOrder.includes(name)) {
+                newOrder.push(name);
+            }
+        });
+        // 3. 更新排序数组并渲染
+        currentSortOrder = newOrder;
+        renderSortList();
+        showStatus(`同步完成：共加载 ${newOrder.length} 个文件`);
+    } catch (e) {
+        showStatus(`同步文件列表失败：${e.message}`, "error");
+    }
+}
+
+// 【修改4】优化渲染逻辑，兼容空列表+特殊字符
+function renderSortList(){
+    sortListEl.innerHTML = "";
+    if (currentSortOrder.length === 0) {
+        sortListEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--sub);">暂无文件，请先刷新仓库列表</div>';
+        return;
+    }
+    currentSortOrder.forEach((name, idx)=>{
+        const div = document.createElement("div");
+        div.className = "sort-item";
+        // 转义特殊字符（避免XSS+布局错乱）
+        const safeName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        div.innerHTML = `
+            <span class="name">${idx+1}. ${safeName}</span>
+            <div>
+                <button onclick="moveUp(${idx})">上移</button>
+                <button onclick="moveDown(${idx})">下移</button>
+            </div>
+        `;
+        sortListEl.appendChild(div);
+    });
+}
+
+// 上下移动逻辑（无修改）
+function moveUp(idx){
+    if(idx <= 0) return;
+    [currentSortOrder[idx-1], currentSortOrder[idx]] = [currentSortOrder[idx], currentSortOrder[idx-1]];
+    renderSortList();
+}
+function moveDown(idx){
+    if(idx >= currentSortOrder.length - 1) return;
+    [currentSortOrder[idx+1], currentSortOrder[idx]] = [currentSortOrder[idx], currentSortOrder[idx+1]];
+    renderSortList();
+}
+
+// 【修改5】优化排序配置保存逻辑，兼容空列表
+async function saveSortConfig(){
+    statusBox.classList.add("hide");
+    if (currentSortOrder.length === 0) {
+        return showStatus("排序列表为空，无需保存", "error");
+    }
+    const filePath = "novel/sort.json";
+    const contentObj = { order: currentSortOrder };
+    // 格式化JSON，避免解析异常
+    const text = JSON.stringify(contentObj, null, 2);
+    const b64 = btoa(unescape(encodeURIComponent(text)));
+    let sha = null;
+    try{
+        const getUrl = `${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/${filePath}`;
+        const resGet = await fetch(getUrl,{headers:{Authorization:`Bearer ${GH_CONFIG.token}`}});
+        if(resGet.ok){
+            const d = await resGet.json();
+            sha = d.sha;
+        }
+    }catch(e){}
+    const body = {
+        message:"更新书架自定义排序sort.json",
+        content:b64,
+        branch:"main"
+    };
+    if(sha) body.sha = sha;
+    try {
+        const res = await fetch(`${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/${filePath}`,{
+            method:"PUT",
+            headers:{
+                Authorization:`Bearer ${GH_CONFIG.token}`,
+                "Accept":"application/vnd.github+json",
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify(body)
+        });
+        if(!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.message || `HTTP错误：${res.status}`);
+        }
+        showStatus("排序配置已保存上传，刷新首页即可生效");
+    } catch (e) {
+        showStatus(`保存排序失败：${e.message}`, "error");
+    }
+}
+
+// 加载小说列表（无核心修改，仅优化提示）
+async function loadNovelList(){
+    statusBox.classList.add("hide");
+    const url = `${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/novel`;
+    try{
+        const res = await fetch(url,{
+            headers:{Authorization:`Bearer ${GH_CONFIG.token}`,"Accept":"application/vnd.github+json"}
+        });
+        if(!res.ok) throw new Error(`网络或令牌权限错误：${res.status}`);
+        const list = await res.json();
+        const files = list.filter(item => item.type === "file");
+        novelSelect.innerHTML = `<option value="">-- 选择文件 --</option>`;
+        files.forEach(f=>{
+            const opt = document.createElement("option");
+            opt.value = f.name;
+            opt.innerText = f.name;
+            novelSelect.appendChild(opt);
+        })
+        showStatus(`加载完成，共${files.length}个文件`);
+    }catch(e){
+        showStatus("加载失败："+e.message,"error");
+    }
+}
+
+// 载入选中文件（无修改）
+async function loadSelectedNovel(){
+    statusBox.classList.add("hide");
+    const filename = novelSelect.value;
+    if(!filename) return showStatus("请先选择文件","error");
+    const path = `novel/${filename}`;
+    const url = `${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/${path}`;
+    try{
+        const res = await fetch(url,{
+            headers:{Authorization:`Bearer ${GH_CONFIG.token}`,"Accept":"application/vnd.github+json"}
+        });
+        const data = await res.json();
+        currentFileSha = data.sha;
+        let fullText = decodeURIComponent(escape(atob(data.content)));
+        const meta = parseMeta(fullText);
+        if(meta){
+            titleInput.value = meta.title || "";
+            authorInput.value = meta.author || "";
+        }else{
+            titleInput.value = "";
+            authorInput.value = "";
+        }
+        let pureText = stripMetaComment(fullText);
+        fileNameInput.value = filename;
+        contentArea.value = pureText;
+        updatePreview();
+        showStatus("载入完成，元数据已自动隐藏，可直接编辑正文");
+    }catch(e){
+        showStatus("读取失败："+e.message,"error");
+    }
+}
+
+// 删除选中文件（无修改）
+async function deleteSelectedNovel(){
+    const filename = novelSelect.value;
+    if(!filename) return showStatus("请先选择要删除的文件","error");
+    if(!confirm(`⚠️ 警告：确定永久删除仓库中 novel/${filename} 文件吗？删除后无法恢复！`)) return;
+    statusBox.classList.add("hide");
+    const filePath = `novel/${filename}`;
+    const getUrl = `${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/${filePath}`;
+    try{
+        const resGet = await fetch(getUrl,{
+            headers:{Authorization:`Bearer ${GH_CONFIG.token}`,"Accept":"application/vnd.github+json"}
+        });
+        if(!resGet.ok) throw new Error("文件不存在");
+        const fileData = await resGet.json();
+        const deleteUrl = `${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/${filePath}`;
+        const deleteBody = {
+            message: `删除文件：${filename}`,
+            sha: fileData.sha,
+            branch: "main"
+        };
+        const delRes = await fetch(deleteUrl,{
+            method:"DELETE",
+            headers:{
+                Authorization:`Bearer ${GH_CONFIG.token}`,
+                "Accept":"application/vnd.github+json",
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify(deleteBody)
+        });
+        if(!delRes.ok) throw new Error("删除接口调用失败");
+        createNewNovel();
+        await loadNovelList();
+        showStatus(`已永久删除文件：${filename}`);
+    }catch(e){
+        showStatus("删除失败："+e.message,"error");
+    }
+}
+
+// 生成元数据（无修改）
+function generateMeta(){
+    const font = localStorage.getItem("zw_read_fontSize")||"18px";
+    const line = localStorage.getItem("zw_read_lineHeight")||"1.8";
+    const bg = localStorage.getItem("zw_read_bgColor")||"#f5f0e1";
+    const theme = localStorage.getItem("zw_read_theme")||"light";
+    const title = titleInput.value.trim();
+    const author = authorInput.value.trim();
+    const metaObj = {fontSize:font,lineHeight:line,bgColor:bg,theme:theme,title,author};
+    return `<!-- ZW_META:${JSON.stringify(metaObj)} -->\n\n`;
+}
+
+// 导出本地文件（无修改）
+function exportTxt(){
+    const fileName = fileNameInput.value.trim() || "文件.txt";
+    const fullContent = generateMeta() + contentArea.value;
+    const blob = new Blob([fullContent],{type:"text/plain;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showStatus("本地文件下载成功");
+}
+
+// 上传到GitHub（无修改）
+async function uploadToGithub(){
+    statusBox.classList.add("hide");
+    const fileName = fileNameInput.value.trim();
+    const msg = commitMsgInput.value.trim() || "更新内容";
+    const raw = contentArea.value;
+    if(!fileName||!raw) return showStatus("文件名、正文不能为空","error");
+    const filePath = `novel/${fileName}`;
+    const fullText = generateMeta() + raw;
+    const b64 = btoa(unescape(encodeURIComponent(fullText)));
+    const body = {message:msg,content:b64,branch:"main"};
+    if(currentFileSha) body.sha = currentFileSha;
+    try{
+        const res = await fetch(`${GH_API}/repos/${GH_CONFIG.user}/${GH_CONFIG.repo}/contents/${filePath}`,{
+            method:"PUT",
+            headers:{
+                Authorization:`Bearer ${GH_CONFIG.token}`,
+                "Accept":"application/vnd.github+json",
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify(body)
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.message);
+        currentFileSha = data.content.sha;
+        showStatus("保存成功，已同步至GitHub novel文件夹");
+    }catch(e){
+        showStatus("上传失败："+e.message,"error");
+    }
+}
+
+// 富文本编辑工具方法（无修改）
+function getSel(){
+    const s = contentArea.selectionStart;
+    const e = contentArea.selectionEnd;
+    const all = contentArea.value;
+    const txt = all.slice(s,e);
+    return {s,e,txt,all};
+}
+function setText(start,end,newTxt){
+    const data = getSel();
+    contentArea.value = data.all.slice(0,start)+newTxt+data.all.slice(end);
+    contentArea.focus();
+    updatePreview();
+}
+function formatBold(){const d=getSel();setText(d.s,d.e,`**${d.txt}**`)}
+function formatItalic(){const d=getSel();setText(d.s,d.e,`*${d.txt}*`)}
+function formatUnderline(){const d=getSel();setText(d.s,d.e,`<u>${d.txt}</u>`)}
+function formatStrike(){const d=getSel();setText(d.s,d.e,`~~${d.txt}~~`)}
+function formatH1(){const d=getSel();setText(d.s,d.e,`# ${d.txt}`)}
+function formatH2(){const d=getSel();setText(d.s,d.e,`## ${d.txt}`)}
+function formatH3(){const d=getSel();setText(d.s,d.e,`### ${d.txt}`)}
+function listOrder(){
+    const d = getSel();
+    const arr = d.txt.split("\n").map((v,i)=>`${i+1}. ${v}`).join("\n");
+    setText(d.s,d.e,arr);
+}
+function listUnorder(){
+    const d=getSel();
+    const arr = d.txt.split("\n").map(v=>`- ${v}`).join("\n");
+    setText(d.s,d.e,arr);
+}
+function alignLeft(){const d=getSel();setText(d.s,d.e,`<div align="left">${d.txt}</div>`)}
+function alignCenter(){const d=getSel();setText(d.s,d.e,`<div align="center">${d.txt}</div>`)}
+function alignRight(){const d=getSel();setText(d.s,d.e,`<div align="right">${d.txt}</div>`)}
+function clearFormat(){
+    let t = contentArea.value;
+    t = t.replace(/(\*\*|\*|~~|<u>|<\/u>|<div.*?>|<\/div>|#+\s)/g,"");
+    contentArea.value = t;
+    updatePreview();
+}
+function clearBlankLine(){
+    contentArea.value = contentArea.value.replace(/\n\s*\n/g,"\n");
+    updatePreview();
+}
+function clearSpace(){
+    contentArea.value = contentArea.value.replace(/[ \t]+/g," ");
+    updatePreview();
+}
+function halfFull(){
+    const map = {"０":"0","１":"1","２":"2","３":"3","４":"4","５":"5","６":"6","７":"7","８":"8","９":"9","，":",","。":".","？":"?","！":"!"};
+    let str = contentArea.value;
+    for(let k in map) str=str.replaceAll(k,map[k]);
+    contentArea.value = str;
+    updatePreview();
+}
+function punctSwap(){
+    let s = contentArea.value;
+    s = s.replaceAll(",","，").replaceAll(".","。").replaceAll("?","？").replaceAll("!","！");
+    contentArea.value = s;
+    updatePreview();
+}
+function upperLower(){
+    const d = getSel();
+    const t = d.txt;
+    if(t===t.toUpperCase()) setText(d.s,d.e,t.toLowerCase())
+    else setText(d.s,d.e,t.toUpperCase())
+}
+function fanJian(){alert("繁简转换可自行接入第三方接口拓展");}
+function findReplace(){
+    const find = prompt("查找文字：");
+    if(!find) return;
+    const rep = prompt("替换为：");
+    contentArea.value = contentArea.value.replaceAll(find,rep);
+    updatePreview();
+}
+function copyPure(){
+    navigator.clipboard.writeText(contentArea.value);
+    showStatus("纯文本已复制剪贴板");
+}
+function clearAll(){
+    if(confirm("确定清空全部内容？")){
+        contentArea.value = "";
+        titleInput.value = "";
+        authorInput.value = "";
+        updatePreview();
+    }
+}
+
+// 初始化预览
+updatePreview();
+</script>
+</body>
+</html>
