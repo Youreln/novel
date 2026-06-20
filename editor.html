@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中梧小说 - 编辑器</title>
+    <style>
+        :root { --bg-color: #121212; --text-color: #fff; --glass-bg: rgba(255,255,255,0.08); --glass-border: rgba(255,255,255,0.1); }
+        [data-theme="light"] { --bg-color: #f5f5dc; --text-color: #000; --glass-bg: rgba(255,255,255,0.6); --glass-border: rgba(255,255,255,0.8); }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: system-ui; background: var(--bg-color); color: var(--text-color); min-height: 100vh; padding: 30px; }
+        .editor-container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+        input, textarea {
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);
+            background: var(--glass-bg); color: var(--text-color); font-size: 16px; outline: none;
+        }
+        textarea { height: 60vh; resize: vertical; font-family: inherit; line-height: 1.6; }
+        .actions { display: flex; gap: 10px; justify-content: flex-end; }
+        button {
+            padding: 10px 20px; border-radius: 8px; border: 1px solid var(--glass-border);
+            background: var(--glass-bg); color: var(--text-color); cursor: pointer; font-size: 14px;
+        }
+        button:hover { filter: brightness(1.2); }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>写小说</h1>
+            <a href="index.html" style="color:var(--text-color); text-decoration:none;">返回首页</a>
+        </div>
+        <input type="text" id="novel-title" placeholder="小说名称">
+        <input type="text" id="novel-author" placeholder="作者名称">
+        <textarea id="novel-content" placeholder="在此开始你的创作..."></textarea>
+        <div class="actions">
+            <button onclick="exportNovel('txt')">导出 TXT</button>
+            <button onclick="exportNovel('md')">导出 MD</button>
+            <button onclick="exportNovel('html')">导出 HTML</button>
+        </div>
+    </div>
+
+    <script>
+        function getPrefs() {
+            return JSON.parse(localStorage.getItem('zw_prefs') || JSON.stringify({
+                fontSize: 18, lineHeight: 1.8, bgColor: '#121212'
+            }));
+        }
+
+        function exportNovel(type) {
+            const title = document.getElementById('novel-title').value.trim() || '未命名小说';
+            const author = document.getElementById('novel-author').value.trim() || '未知作者';
+            const content = document.getElementById('novel-content').value;
+            const prefs = getPrefs();
+            
+            // 注入元数据
+            const metaData = { ...prefs, title, author };
+            const metaStr = `<!-- ZW_META:${JSON.stringify(metaData)} -->\n`;
+            
+            let finalContent = '', mime = '';
+            if (type === 'txt') {
+                finalContent = metaStr + `《${title}》\n作者：${author}\n\n${content}`;
+                mime = 'text/plain';
+            } else if (type === 'md') {
+                finalContent = metaStr + `# 《${title}》\n**作者**：${author}\n\n${content}`;
+                mime = 'text/markdown';
+            } else {
+                finalContent = metaStr + `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title></head><body><h1>《${title}》</h1><p>作者：${author}</p><div>${content.replace(/\n/g, '<br>')}</div></body></html>`;
+                mime = 'text/html';
+            }
+
+            const blob = new Blob([finalContent], { type: `${mime};charset=utf-8` });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${title}.${type}`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
