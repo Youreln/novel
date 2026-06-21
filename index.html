@@ -22,7 +22,6 @@
 body{font-family:system-ui,-apple-system,sans-serif;min-height:100vh;background:var(--bg);color:var(--text);padding:16px;transition:var(--transition)}
 .container{max-width:1200px;margin:0 auto}
 
-/* 顶部导航 */
 .top-nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:20px 24px;margin-bottom:24px;background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border)}
 .nav-brand h1{display:flex;align-items:center;gap:8px;font-size:1.6rem;color:var(--accent);font-weight:700}
 .nav-links{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
@@ -32,7 +31,6 @@ body{font-family:system-ui,-apple-system,sans-serif;min-height:100vh;background:
 .theme-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .theme-btn:hover{background:var(--accent-light)}
 
-/* 搜索栏 */
 .search-bar{width:100%;margin-bottom:16px;display:flex;gap:10px;align-items:center}
 #searchInput{flex:1;padding:12px 20px;border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--card);color:var(--text);font-size:0.95rem;outline:none;transition:var(--transition)}
 #searchInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
@@ -42,7 +40,6 @@ body{font-family:system-ui,-apple-system,sans-serif;min-height:100vh;background:
 #resetBtn{border:1px solid var(--border);background:transparent;color:var(--text)}
 #resetBtn:hover{background:var(--accent-light)}
 
-/* 操作栏 */
 .action-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:20px}
 .mode-switch{display:flex;gap:8px;align-items:center}
 .mode-btn,.sort-select{padding:10px 20px;border:1px solid var(--border);border-radius:14px;background:transparent;color:var(--text);cursor:pointer;font-size:0.88rem;transition:var(--transition);font-weight:500}
@@ -51,12 +48,10 @@ body{font-family:system-ui,-apple-system,sans-serif;min-height:100vh;background:
 .write-btn{background:var(--accent);color:#fff;border-color:var(--accent);text-decoration:none;padding:10px 20px;border-radius:14px;font-size:0.88rem;font-weight:500;transition:var(--transition)}
 .write-btn:hover{background:#4a61d0;box-shadow:0 4px 12px rgba(94,114,228,0.4)}
 
-/* 状态提示 */
 .status-tip{text-align:center;color:var(--sub);padding:10px;margin-bottom:20px;font-size:0.95rem}
 .loader{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;margin:24px auto;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* 小说网格 */
 .novel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-bottom:32px}
 .book-group-title{grid-column:1/-1;margin:16px 0 12px;font-size:1.3rem;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .novel-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;cursor:pointer;transition:all var(--transition);position:relative;overflow:hidden}
@@ -68,7 +63,6 @@ body{font-family:system-ui,-apple-system,sans-serif;min-height:100vh;background:
 .novel-author{font-size:0.82rem;color:var(--sub);margin-bottom:12px}
 .novel-meta{font-size:0.86rem;color:var(--sub);padding-top:12px;border-top:1px solid var(--border);opacity:0.8}
 
-/* 阅读视图 */
 #reader-view{display:none;background:var(--reader-bg);padding:32px;border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border);margin-top:20px}
 .reader-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
 .reader-title{font-size:1.8rem;font-weight:700;color:var(--accent)}
@@ -76,7 +70,6 @@ body{font-family:system-ui,-apple-system,sans-serif;min-height:100vh;background:
 .back-btn:hover{background:var(--accent);color:#fff;transform:translateY(-2px)}
 .reader-meta{text-align:center;color:var(--sub);margin-bottom:24px;line-height:1.6;font-size:0.95rem}
 
-/* 阅读设置 */
 .reader-settings{display:flex;flex-wrap:wrap;gap:16px;padding:20px 24px;background:rgba(0,0,0,0.03);border-radius:var(--radius-md);margin-bottom:28px;border:1px solid var(--border);align-items:center}
 .reader-settings span{color:var(--sub);font-size:0.94rem;white-space:nowrap}
 .setting-btn-sm{padding:8px 14px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--text);cursor:pointer;font-size:0.85rem;transition:var(--transition)}
@@ -94,7 +87,6 @@ body{font-family:system-ui,-apple-system,sans-serif;min-height:100vh;background:
 .page-control{display:flex;gap:16px;justify-content:center;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
 .page-info{color:var(--sub);font-size:0.9rem}
 
-/* 设置弹窗 */
 .setting-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;display:none;align-items:center;justify-content:center}
 .setting-box{width:92%;max-width:600px;background:var(--card);border-radius:var(--radius-lg);padding:32px;border:1px solid var(--border);box-shadow:0 12px 40px rgba(0,0,0,0.18);animation:modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards}
 @keyframes modalIn{from{transform:scale(0.9) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
@@ -249,11 +241,11 @@ const CONFIG = {
     GH_BRANCH: "main",
     GH_API: "https://api.github.com/repos",
     CDN_BASE: "https://cdn.jsdelivr.net/gh/Youreln/novel@main/",
+    SORT_PATH: "novel/sort.json", // sort.json 固定路径
     MAX_CONCURRENT: 6,
     STORAGE_KEY: "zw_novel_setting"
 };
 
-// 全局状态
 let allNovels = [];
 let filterNovels = [];
 let sortOrder = [];
@@ -265,7 +257,6 @@ let totalPages = 1;
 let pageContents = [];
 let fontSize = 18;
 
-// DOM缓存
 const $ = id => document.getElementById(id);
 const statusTip = $("statusTip");
 const loader = $("loader");
@@ -274,11 +265,9 @@ const sortSelect = $("sortSelect");
 const searchInput = $("searchInput");
 
 // ===================== 工具函数 =====================
-// 修复1：统一路径编码，全部decode确保完全匹配
-function encodePath(path) { return encodeURI(path) }
-function decodePath(path) { return decodeURIComponent(decodeURIComponent(path)) }
+function encodePath(p) { return encodeURI(p) }
 
-// 修复2：自然排序算法，识别文件名中的数字，按章节顺序排列
+// 自然排序：识别章节数字，按1、2、3...顺序排列
 function naturalSort(a, b) {
     const reg = /(\d+)/g;
     const arrA = a.fileName.split(reg);
@@ -301,7 +290,32 @@ function naturalSort(a, b) {
 function showStatus(text) { statusTip.textContent = text }
 function showError(text) { statusTip.innerHTML = `<div class="error-tip">${text}</div>` }
 
-// ===================== 核心数据加载 =====================
+// ===================== 核心：实时读取sort.json（走GitHub API绕过CDN缓存） =====================
+async function loadSortConfig() {
+    try {
+        // 加时间戳强制绕过缓存，实时读取最新版本
+        const timestamp = Date.now();
+        const url = `${CONFIG.GH_API}/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.SORT_PATH}?t=${timestamp}`;
+        const res = await fetch(url, {
+            headers: { "Accept": "application/vnd.github.raw" }
+        });
+        
+        if (!res.ok) {
+            console.log("无sort.json配置，使用自然排序兜底");
+            return [];
+        }
+        
+        const raw = await res.text();
+        const json = JSON.parse(raw);
+        // 直接使用原始路径，不做多余解码，确保完全匹配
+        return Array.isArray(json.order) ? json.order : [];
+    } catch (e) {
+        console.warn("读取sort.json失败，使用自然排序：", e.message);
+        return [];
+    }
+}
+
+// 获取仓库文件树
 async function fetchRepoTree() {
     try {
         const url = `${CONFIG.GH_API}/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/git/trees/${CONFIG.GH_BRANCH}?recursive=1`;
@@ -315,22 +329,7 @@ async function fetchRepoTree() {
     }
 }
 
-// 修复3：强制双重decode，确保sort.json路径和文件路径完全一致
-async function loadSortConfig() {
-    try {
-        const sortUrl = CONFIG.CDN_BASE + encodePath("novel/sort.json");
-        const res = await fetch(sortUrl);
-        if (!res.ok) return [];
-        const raw = await res.text();
-        const json = JSON.parse(raw);
-        // 双重解码，处理CDN可能的二次编码问题
-        return Array.isArray(json.order) ? json.order.map(p => decodePath(p)) : [];
-    } catch (e) {
-        console.log("无sort.json配置，使用原生顺序");
-        return [];
-    }
-}
-
+// 批量加载小说内容
 async function batchLoadNovels(fileList) {
     const results = [];
     let loaded = 0;
@@ -357,14 +356,13 @@ async function batchLoadNovels(fileList) {
                 const bookName = pathParts.length >= 2 ? pathParts[0] : "未分类";
                 
                 results.push({
-                    path: filePath,
+                    path: filePath, // 路径保持原始格式，和sort.json完全一致
                     fileName: fileName,
                     title: meta.title || fileName.replace(/\.(md|txt)$/i, ""),
                     author: meta.author || "佚名",
                     book: meta.book || bookName,
                     content: rawText.replace(/<!--\s*ZW_META:[\s\S]*?-->\s*/, "").trim(),
-                    rawContent: rawText,
-                    updateTime: Date.now()
+                    rawContent: rawText
                 });
             } catch (e) {
                 console.warn(`跳过加载失败文件: ${filePath}`, e.message);
@@ -385,11 +383,13 @@ async function batchLoadNovels(fileList) {
     return results;
 }
 
+// 主加载入口
 async function loadAllData() {
     loader.style.display = "block";
     showStatus("📖 加载中 (0/0)...");
     
     try {
+        // 并行加载文件树 + 实时读取排序配置
         const [tree, sortConfig] = await Promise.all([
             fetchRepoTree(),
             loadSortConfig()
@@ -397,9 +397,10 @@ async function loadAllData() {
         
         sortOrder = sortConfig;
         
+        // 筛选有效小说文件
         const novelFiles = tree
             .filter(item => {
-                const path = decodePath(item.path);
+                const path = item.path;
                 const name = path.split("/").pop();
                 return item.type === "blob"
                     && path.startsWith("novel/")
@@ -407,7 +408,7 @@ async function loadAllData() {
                     && /\.(md|txt)$/i.test(name)
                     && name !== "sort.json";
             })
-            .map(item => decodePath(item.path));
+            .map(item => item.path); // 保持原始路径，不做解码
         
         if (novelFiles.length === 0) {
             showError("仓库novel目录下未找到小说文件");
@@ -435,20 +436,18 @@ async function loadAllData() {
 function sortNovels(list) {
     const sorted = [...list];
     if (currentSortMode === "custom" && sortOrder.length > 0) {
-        // 自定义排序：严格按sort.json顺序
+        // 严格按sort.json顺序匹配，路径完全一致
         sorted.sort((a, b) => {
             const ai = sortOrder.indexOf(a.path);
             const bi = sortOrder.indexOf(b.path);
             if (ai === -1 && bi === -1) return naturalSort(a, b);
-            if (ai === -1) return 1;
+            if (ai === -1) return 1; // 不在排序表里的放后面
             if (bi === -1) return -1;
             return ai - bi;
         });
     } else if (currentSortMode === "natural") {
-        // 自然排序：识别章节数字
         sorted.sort(naturalSort);
     } else if (currentSortMode === "name") {
-        // 文件名字典序
         sorted.sort((a, b) => a.fileName.localeCompare(b.fileName, "zh-CN"));
     }
     return sorted;
@@ -464,7 +463,7 @@ function renderNovelList() {
     }
     
     if (currentViewMode === "book") {
-        // 书籍分组：组内也严格应用排序
+        // 按书籍分组，组内保持排序
         const bookMap = {};
         sortedList.forEach(novel => {
             if (!bookMap[novel.book]) bookMap[novel.book] = [];
@@ -484,7 +483,6 @@ function renderNovelList() {
             title.innerHTML = `<i class="fa-solid fa-book-bookmark"></i> ${bookName} (${bookMap[bookName].length}篇)`;
             novelListEl.appendChild(title);
             
-            // 组内已经是排好序的，直接渲染
             bookMap[bookName].forEach(novel => {
                 novelListEl.appendChild(createNovelCard(novel));
             });
