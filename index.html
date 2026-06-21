@@ -2,588 +2,306 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>中梧小说 - 书架</title>
-<!-- 替换为根目录favicon.ico -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中梧小说书架</title>
 <link rel="icon" href="favicon.ico" type="image/x-icon">
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="favicon.ico">
-
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root {
-    --bg-color: #f4ecd8;
-    --card-bg: rgba(251, 246, 237, 0.75);
-    --text-main: #5b4636;
-    --text-sub: #8b7355;
-    --accent: #5e72e4;
-    --accent-light: rgba(94, 114, 228, 0.12);
-    --border: rgba(230, 220, 200, 0.6);
-    --shadow: 0 6px 22px rgba(0,0,0,0.06);
-    --radius-lg: 24px;
-    --radius-md: 16px;
-    --radius-pill: 9999px;
-    --blur: 14px;
-    --reader-bg: #fbf6ed;
-    --reader-text: #5b4636;
+    --bg:#f4ecd8;--card:rgba(251,246,237,0.75);--text:#5b4636;--sub:#8b7355;
+    --accent:#5e72e4;--accent-light:rgba(94,114,228,0.12);--border:rgba(230,220,200,0.6);
+    --shadow:0 6px 22px rgba(0,0,0,0.06);--radius-lg:24px;--radius-md:16px;--radius-pill:9999px;--blur:14px;
+    --reader-bg:#fbf6ed;--reader-text:#5b4636;
 }
-[data-theme="light"] {
-    --bg-color: #f4f6f9;
-    --card-bg: rgba(255,255,255,0.72);
-    --text-main: #333333;
-    --text-sub: #666666;
-    --accent: #5e72e4;
-    --border: rgba(238,238,238,0.7);
-    --reader-bg: #ffffff;
-    --reader-text: #333333;
-}
-[data-theme="dark"] {
-    --bg-color: #121212;
-    --card-bg: rgba(45, 45, 45, 0.7);
-    --text-main: #e0e0e0;
-    --text-sub: #aaaaaa;
-    --accent: #8296f0;
-    --border: rgba(68,68,68,0.6);
-    --reader-bg: #202020;
-    --reader-text: #d0d0d0;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    padding: 16px;
-    transition: background-color 0.35s ease, color 0.35s ease;
-    min-height: 100vh;
-}
-.container { max-width: 920px; margin: 0 auto; }
-
-/* 顶部导航 毛玻璃大圆角 */
-.top-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding: 20px 24px;
-    background: var(--card-bg);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(var(--blur));
-    -webkit-backdrop-filter: blur(var(--blur));
-    border: 1px solid var(--border);
-}
-.nav-brand h1 { font-size: 1.6rem; color: var(--accent); margin: 0; display: flex; align-items: center; gap: 8px; }
-.nav-links { display: flex; gap: 12px; flex-wrap: wrap; }
-.nav-links a {
-    text-decoration: none;
-    color: var(--text-sub);
-    font-size: 0.88rem;
-    font-weight: 500;
-    padding: 9px 18px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    transition: all 0.28s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    backdrop-filter: blur(6px);
-}
-.nav-links a i { font-size:0.95rem; }
-.nav-links a:hover { color: #fff; background: var(--accent); border-color: var(--accent); box-shadow: 0 4px 12px rgba(94,114,228,0.3); }
-
-/* 模式切换 + 创作按钮 组合栏 */
-.mode-action-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 20px;
-}
-/* 模式切换按钮组 */
-.mode-switch {
-    display: flex;
-    gap: 10px;
-}
-.mode-btn {
-    padding: 9px 18px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--text-main);
-    cursor: pointer;
-    font-size: 0.88rem;
-    transition: all 0.26s ease;
-}
-.mode-btn.active {
-    background: var(--accent);
-    color: #ffffff;
-    border-color: var(--accent);
-    box-shadow: 0 4px 12px rgba(94,114,228,0.32);
-}
-/* 创作按钮 */
-.action-bar { display: flex; justify-content: flex-end; }
-.btn-write {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--accent);
-    color: #fff;
-    padding: 13px 28px;
-    border-radius: var(--radius-pill);
-    text-decoration: none;
-    font-size: 0.98rem;
-    font-weight: 600;
-    box-shadow: 0 6px 16px rgba(94,114,228,0.35);
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
-}
-.btn-write:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(94,114,228,0.42); color: #fff; }
-
-/* 加载提示 */
-.status { text-align: center; color: var(--text-sub); font-size: 0.95rem; margin-bottom: 20px; padding: 10px; border-radius: var(--radius-md); }
-.loader {
-    border: 4px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    width: 36px; height: 36px;
-    margin: 24px auto;
-    animation: spin 1s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* 书架卡片网格 */
-.novel-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 20px;
-}
-.novel-card {
-    background: var(--card-bg);
-    border-radius: var(--radius-md);
-    padding: 24px;
-    box-shadow: var(--shadow);
-    cursor: pointer;
-    transition: transform 0.24s ease, box-shadow 0.24s ease;
-    border:1px solid var(--border);
-    display:flex;flex-direction:column;
-    backdrop-filter: blur(var(--blur));
-    -webkit-backdrop-filter: blur(var(--blur));
-}
-.novel-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.1);
-    border-color:var(--accent);
-}
-.novel-title { font-size:1.18rem; font-weight:600; margin-bottom:8px; line-height:1.4; }
-.novel-author { font-size:0.82rem; color:var(--text-sub); margin-bottom:12px; }
-.novel-meta { font-size:0.86rem; color:var(--text-sub); margin-top:auto; padding-top:12px; border-top:1px solid var(--border); }
-
-/* 阅读面板 */
-#reader-view {
-    display:none;
-    background: var(--card-bg);
-    padding: 28px;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(var(--blur));
-    -webkit-backdrop-filter: blur(var(--blur));
-    border: 1px solid var(--border);
-}
-/* 阅读页标题 */
-.reader-title {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-    text-align: center;
-}
-.reader-author {
-    text-align: center;
-    color: var(--text-sub);
-    margin-bottom: 24px;
-    font-size: 0.95rem;
-}
-.back-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--accent);
-    font-size:1rem;
-    cursor:pointer;
-    margin-bottom:24px;
-    padding:10px 20px;
-    border-radius: var(--radius-pill);
-    transition: all 0.28s ease;
-    display: inline-flex;
-    align-items: center;
-    gap:8px;
-}
-.back-btn::before { content: "←"; font-size:1.1rem; }
-.back-btn:hover { background: var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 4px 10px rgba(94,114,228,0.25); }
-
-/* 设置按钮面板 核心美化 */
-.settings-panel {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 18px 22px;
-    background: rgba(0,0,0,0.03);
-    border-radius: var(--radius-md);
-    margin-bottom: 28px;
-    align-items: center;
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--border);
-}
-.settings-panel span {
-    font-size: 0.94rem;
-    color: var(--text-sub);
-    margin-right: 6px;
-    font-weight: 500;
-}
-.setting-btn {
-    padding: 9px 18px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--text-main);
-    cursor: pointer;
-    font-size: 0.88rem;
-    transition: all 0.26s ease;
-    min-width: 66px;
-}
-.setting-btn:hover {
-    border-color: var(--accent);
-    background: var(--accent-light);
-}
-.setting-btn.active {
-    background: var(--accent);
-    color: #ffffff;
-    border-color: var(--accent);
-    box-shadow: 0 4px 12px rgba(94,114,228,0.32);
-}
-
-#content-area {
-    line-height:1.8;
-    word-break:break-word;
-    padding: 8px 4px;
-}
-#content-area h1,h2,h3 { margin: 1.2em 0 0.6em; }
-#content-area p { margin: 0.7em 0; }
-
-/* 移动端适配 */
-@media (max-width:768px){
-    body { padding: 12px; }
-    .top-nav { flex-direction:column; align-items:center; text-align:center; padding:16px; }
-    .novel-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:16px; }
-    #reader-view { padding: 20px 16px; }
-    .settings-panel { padding:14px 16px; gap:10px; justify-content:center; }
-    .nav-links { justify-content:center; width:100%; }
-    .mode-action-bar { flex-direction: column; align-items: stretch; }
-    .mode-switch { justify-content: center; }
+[data-theme="light"]{--bg:#f4f6f9;--card:rgba(255,255,255,0.72);--text:#333;--sub:#666;--border:rgba(238,238,238,0.7);--reader-bg:#fff;--reader-text:#333;}
+[data-theme="dark"]{--bg:#121212;--card:rgba(45,45,45,0.7);--text:#e0e0e0;--sub:#aaa;--border:rgba(68,68,68,0.6);--reader-bg:#202020;--reader-text:#d0d0d0;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--text);padding:16px;transition:0.35s}
+.container{max-width:920px;margin:0 auto}
+.top-nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:20px 24px;margin-bottom:24px;background:var(--card);border-radius:var(--radius-lg);backdrop-filter:blur(var(--blur));box-shadow:var(--shadow);border:1px solid var(--border)}
+.nav-brand h1{display:flex;align-items:center;gap:8px;font-size:1.6rem;color:var(--accent)}
+.nav-links{display:flex;gap:12;flex-wrap:wrap}
+.nav-links a{text-decoration:none;color:var(--sub);font-size:0.88rem;padding:9px 18px;border:1px solid var(--border);border-radius:var(--radius-pill);display:flex;gap:7px;align-items:center}
+.nav-links a:hover{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 12px rgba(94,114,228,0.3)}
+.mode-action-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:20px}
+.mode-switch{display:flex;gap:10px;align-items:center}
+.mode-btn,.sort-select{padding:9px 18px;border:1px solid var(--border);border-radius:var(--radius-pill);background:transparent;color:var(--text);cursor:pointer;font-size:0.88rem}
+.mode-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 12px rgba(94,114,228,0.32)}
+.action-bar .btn-write{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;padding:13px 28px;border-radius:var(--radius-pill);text-decoration:none;font-size:0.98rem;font-weight:600;box-shadow:0 6px 16px rgba(94,114,228,0.35)}
+.btn-write:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(94,114,228,0.42);color:#fff}
+.status{text-align:center;color:var(--sub);padding:10px;margin-bottom:20px}
+.loader{width:36px;height:36px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;margin:24px auto;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.novel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.book-group-title{grid-column:1/-1;margin:16px 0 8px;font-size:1.2rem;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:8px}
+.novel-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;cursor:pointer;transition:transform 0.24s;backdrop-filter:blur(var(--blur))}
+.novel-card:hover{transform:translateY(-6px);box-shadow:0 12px 28px rgba(0,0,0.1);border-color:var(--accent)}
+.card-book-tag{font-size:0.78rem;color:var(--accent);margin-bottom:6px}
+.novel-title{font-size:1.18rem;font-weight:600;margin-bottom:8px}
+.novel-author{font-size:0.82rem;color:var(--sub);margin-bottom:12px}
+.novel-meta{font-size:0.86rem;color:var(--sub);padding-top:12px;border-top:1px solid var(--border)}
+#reader-view{display:none;background:var(--card);padding:28px;border-radius:var(--radius-lg);box-shadow:var(--shadow);backdrop-filter:blur(var(--blur));border:1px solid var(--border)}
+.reader-title{font-size:1.8rem;font-weight:600;color:var(--accent);text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.reader-meta{text-align:center;color:var(--sub);margin-bottom:24px;line-height:1.6}
+.back-btn{background:transparent;border:1px solid var(--border);color:var(--accent);padding:10px 20px;border-radius:var(--radius-pill);cursor:pointer;margin-bottom:24px;font-size:1rem}
+.back-btn:hover{background:var(--accent);color:#fff}
+.settings-panel{display:flex;flex-wrap:wrap;gap:12px;padding:18px 22px;background:rgba(0,0,0,0.03);border-radius:var(--radius-md);margin-bottom:28px;border:1px solid var(--border)}
+.settings-panel span{color:var(--sub);font-size:0.94rem}
+.setting-btn{padding:9px 18px;border:1px solid var(--border);border-radius:var(--radius-pill);background:transparent;color:var(--text);cursor:pointer}
+.setting-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#content-area{line-height:1.8;word-break:break-word;padding:8px 4px}
+#content-area h1,h2,h3{margin:1.2em 0 0.6em}
+#content-area p{margin:0.7em 0}
+@media(max-width:768px){
+    body{padding:12px}
+    .top-nav{flex-direction:column;text-align:center}
+    .mode-action-bar{flex-direction:column;align-items:stretch}
+    .novel-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+    #reader-view{padding:20px 16px}
 }
 </style>
 </head>
 <body data-theme="sepia">
 <div class="container">
-    <!-- 顶部导航 -->
     <nav class="top-nav">
         <div class="nav-brand"><h1><i class="fa-solid fa-book-open"></i>中梧小说</h1></div>
         <div class="nav-links">
-            <a href="https://github.com/Youreln/novel" target="_blank"><i class="fab fa-github"></i>GitHub仓库</a>
-            <a href="https://space.bilibili.com/1372117931" target="_blank"><i class="fab fa-bilibili"></i>中梧B站</a>
+            <a href="editor.html"><i class="fa-solid fa-pen"></i>云笺编辑器</a>
         </div>
     </nav>
 
-    <!-- 模式切换 + 创作按钮 -->
     <div class="mode-action-bar">
         <div class="mode-switch">
-            <button class="mode-btn active" onclick="switchMode('book')">📚 书籍模式</button>
-            <button class="mode-btn" onclick="switchMode('chapter')">📑 所有篇章</button>
+            <button class="mode-btn active" onclick="switchView('book')">📚 书籍模式</button>
+            <button class="mode-btn" onclick="switchView('chapter')">📑 所有篇章</button>
+            <select class="sort-select" id="sortType">
+                <option value="custom">自定义排序</option>
+                <option value="name">标题升序</option>
+            </select>
         </div>
         <div class="action-bar">
             <a href="editor.html" class="btn-write"><i class="fa-solid fa-pen-to-square"></i>写小说</a>
         </div>
     </div>
 
-    <!-- 加载提示 -->
     <div id="status-msg" class="status">正在加载书架...</div>
     <div id="loader" class="loader"></div>
-
-    <!-- 书架列表 -->
     <div id="novel-list" class="novel-grid"></div>
 
-    <!-- 阅读面板 -->
     <div id="reader-view">
-        <button class="back-btn" onclick="showList()">返回书架</button>
-        <!-- 小说标题+作者 -->
-        <h2 id="reader-novel-title" class="reader-title"></h2>
-        <div id="reader-novel-author" class="reader-author"></div>
+        <button class="back-btn" onclick="backToList()">← 返回书架</button>
+        <h2 class="reader-title" id="r-title"></h2>
+        <div class="reader-meta" id="r-meta"></div>
         <div class="settings-panel">
             <span>字号</span>
-            <button class="setting-btn" onclick="adjustFontSize(-2)">A-</button>
-            <button class="setting-btn" onclick="adjustFontSize(2)">A+</button>
-
+            <button class="setting-btn" onclick="font(-2)">A-</button>
+            <button class="setting-btn" onclick="font(2)">A+</span>
             <span style="margin-left:10px">行距</span>
-            <button class="setting-btn lh-btn" data-lh="1.5" onclick="setLineHeight(1.5,this)">紧凑</button>
-            <button class="setting-btn lh-btn active" data-lh="1.8" onclick="setLineHeight(1.8,this)">适中</button>
-            <button class="setting-btn lh-btn" data-lh="2.2" onclick="setLineHeight(2.2,this)">宽松</button>
-
-            <span style="margin-left:10px">阅读主题</span>
-            <button class="setting-btn theme-btn" data-theme="light" onclick="setTheme('light',this)">☀白天</button>
-            <button class="setting-btn theme-btn active" data-theme="sepia" onclick="setTheme('sepia',this)">📖护眼</button>
-            <button class="setting-btn theme-btn" data-theme="dark" onclick="setTheme('dark',this)">🌙夜间</button>
+            <button class="setting-btn lh" data-lh="1.5" onclick="setLH(1.5,this)">紧凑</button>
+            <button class="setting-btn lh active" data-lh="1.8" onclick="setLH(1.8,this)">适中</button>
+            <button class="setting-btn lh" data-lh="2.2" onclick="setLH(2.2,this)">宽松</button>
+            <span style="margin-left:10px">主题</span>
+            <button class="setting th" data-t="light" onclick="setT('light',this)">☀日间</button>
+            <button class="setting th active" data-t="sepia" onclick="setT('sepia',this)">📖护眼</button>
+            <button class="setting th" data-t="dark" onclick="setT('dark',this)">🌙夜间</button>
         </div>
         <div id="content-area"></div>
     </div>
 </div>
 
 <script>
-const GITHUB_USER = 'Youreln';
-const GITHUB_REPO = 'novel';
-const NOVEL_FOLDER_PATH = 'novel';
-let fontSize = parseInt(localStorage.getItem('nw_fontSize')) || 18;
-let lineHeight = parseFloat(localStorage.getItem('nw_lineHeight')) || 1.8;
-let currentTheme = localStorage.getItem('nw_theme') || 'sepia';
-// 新增：模式切换状态
-let currentMode = 'book';
-// 新增：存储所有小说数据（含元信息）
-let allNovelData = [];
-const statusMsg = document.getElementById('status-msg');
-const novelListEl = document.getElementById('novel-list');
-const readerView = document.getElementById('reader-view');
-const contentArea = document.getElementById('content-area');
-const loader = document.getElementById('loader');
-// 新增：阅读页标题/作者元素
-const readerNovelTitle = document.getElementById('reader-novel-title');
-const readerNovelAuthor = document.getElementById('reader-novel-author');
+const GH_USER = "Youreln";
+const GH_REPO = "novel";
+const GH_API = "https://api.github.com/repos";
+let allNovel = [];
+let sortOrder = [];
+let viewMode = "book";
+let sortMode = "custom";
+let fontSize = +localStorage.getItem("nw_font") || 18;
+let lineH = +localStorage.getItem("nw_lh") || 1.8;
+let theme = localStorage.getItem("nw_theme") || "sepia";
 
-window.onload = function(){
-    applySettings();
-    fetchSortedNovels();
+const listEl = document.getElementById("novel-list");
+const status = document.getElementById("status-msg");
+const loader = document.getElementById("loader");
+const reader = document.getElementById("reader-view");
+const contentBox = document.getElementById("content-area");
+const rTitle = document.getElementById("r-title");
+const rMeta = document.getElementById("r-meta");
+const sortSel = document.getElementById("sortType");
+
+window.onload = ()=>{
+    document.body.dataset.theme = theme;
+    contentBox.style.fontSize = fontSize + "px";
+    contentBox.style.lineHeight = lineH;
+    bindSortChange();
+    loadAllData();
 }
-
-// 新增：解析小说元数据（ZW_META）
-function parseNovelMeta(content) {
-    const metaReg = /<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->/;
-    const match = content.match(metaReg);
-    if (!match) return { title: '', author: '', book: '' };
-    try {
-        const meta = JSON.parse(match[1]);
-        return {
-            title: meta.title || '',
-            author: meta.author || '未知作者',
-            book: meta.book || '未分类'
-        };
-    } catch (e) {
-        return { title: '', author: '未知作者', book: '未分类' };
+function bindSortChange(){
+    sortSel.onchange = ()=>{
+        sortMode = sortSel.value;
+        render();
     }
 }
-
-// 获取排序配置
-async function getSortOrder(){
-    try{
-        const res = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/novel/sort.json`);
-        if(!res.ok) return [];
-        const data = await res.json();
-        const raw = decodeURIComponent(escape(atob(data.content)));
-        const cfg = JSON.parse(raw);
-        return cfg.order || [];
-    }catch(e){
-        return [];
+// 递归获取全部小说文件（支持子书籍文件夹）
+async function scanAll(path){
+    const res = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/${path}`);
+    if(!res.ok) return [];
+    const arr = await res.json();
+    let out = [];
+    for(let item of arr){
+        const p = decodeURIComponent(item.path);
+        const n = decodeURIComponent(item.name);
+        if(item.type === "dir"){
+            const sub = await scanAll(p);
+            out = out.concat(sub);
+        }else if(item.type === "file" && n !== "sort.json" && /\.(md|txt)$/i.test(n)){
+            out.push({path:p,name:n,download:item.download_url});
+        }
     }
+    return out;
 }
-
-// 拉取小说并排序 + 解析元数据
-async function fetchSortedNovels(){
-    loader.style.display = 'block';
-    statusMsg.innerText = '读取书架排序配置...';
-    const sortOrder = await getSortOrder();
-    statusMsg.innerText = '加载小说文件...';
-    const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${NOVEL_FOLDER_PATH}`;
+// 解析ZW_META，同时从路径提取书籍
+function parseMeta(raw, filePath){
+    const reg = /<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->/;
+    const m = raw.match(reg);
+    let meta = {title:"",author:"",book:""};
+    if(m){
+        try{meta = JSON.parse(m[1])}catch{}
+    }
+    // 路径提取书籍
+    const seg = filePath.replace("novel/","").split("/");
+    const pathBook = seg.length >=2 ? seg[0] : "未分类";
+    if(!meta.book) meta.book = pathBook;
+    return meta;
+}
+async function loadAllData(){
+    loader.style.display = "block";
+    status.textContent = "读取sort.json排序配置";
+    // 读取排序
     try{
-        const res = await fetch(apiUrl);
-        if(!res.ok) throw new Error("仓库读取失败");
-        const data = await res.json();
-        // 筛选md/txt小说文件
-        const allNovels = data.filter(f=>f.type==="file" && /\.(md|txt)$/i.test(f.name));
-        
-        // 批量获取小说元数据
-        statusMsg.innerText = '解析小说信息...';
-        const novelDataPromises = allNovels.map(async (file) => {
-            try {
-                const contentRes = await fetch(file.download_url);
-                const content = await contentRes.text();
-                const meta = parseNovelMeta(content);
-                return {
-                    ...file,
-                    meta: meta,
-                    // 标题优先级：元数据title > 文件名（去后缀）
-                    displayTitle: meta.title || file.name.replace(/\.(md|txt)$/i, ''),
-                    author: meta.author || '未知作者',
-                    book: meta.book || '未分类'
-                };
-            } catch (e) {
-                return {
-                    ...file,
-                    meta: { title: '', author: '未知作者', book: '未分类' },
-                    displayTitle: file.name.replace(/\.(md|txt)$/i, ''),
-                    author: '未知作者',
-                    book: '未分类'
-                };
-            }
+        const sRes = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/novel/sort.json`);
+        if(sRes.ok){
+            const d = await sRes.json();
+            let raw = decodeURIComponent(escape(atob(d.content)));
+            sortOrder = JSON.parse(raw).order.map(x=>decodeURIComponent(x));
+        }
+    }catch{sortOrder = []}
+    status.textContent = "扫描所有书籍文件夹与小说";
+    const files = await scanAll("novel");
+    allNovel = [];
+    for(let f of files){
+        const txt = await (await fetch(f.download)).text();
+        const meta = parseMeta(txt,f.path);
+        const pure = txt.replace(/<!-- ZW_META:[\s\S]*? -->\n\n/,"");
+        allNovel.push({
+            path:f.path,
+            name:f.name,
+            url:f.download,
+            title:meta.title || f.name.replace(/\.(md|txt)$/,""),
+            author:meta.author || "未知作者",
+            book:meta.book,
+            raw:pure
         });
-        allNovelData = await Promise.all(novelDataPromises);
-
-        // 按sort.json排序
-        const ordered = [];
-        const rest = [];
-        sortOrder.forEach(name=>{
-            const item = allNovelData.find(f=>f.name === name);
+    }
+    loader.style.display = "none";
+    status.style.display = "none";
+    render();
+}
+// 切换视图：书籍/篇章
+function switchView(mode){
+    viewMode = mode;
+    document.querySelectorAll(".mode-btn").forEach(b=>b.classList.toggle("active",b.onclick.includes(mode)));
+    render();
+}
+// 渲染列表
+function render(){
+    listEl.innerHTML = "";
+    let data = [...allNovel];
+    // 排序处理
+    if(sortMode === "custom"){
+        const ordered = [], rest = [];
+        sortOrder.forEach(p=>{
+            const item = data.find(x=>x.path === p);
             if(item) ordered.push(item);
         });
-        allNovelData.forEach(item=>{
-            if(!ordered.find(v=>v.name === item.name)) rest.push(item);
-        });
-        allNovelData = [...ordered, ...rest];
-        
-        // 渲染对应模式
-        renderNovelList(currentMode);
-        statusMsg.style.display = 'none';
-    }catch(err){
-        statusMsg.innerHTML = `加载失败：${err.message}<br>请检查网络与仓库权限`;
-    }finally{
-        loader.style.display = 'none';
+        data.forEach(x=>{if(!ordered.find(i=>i.path===x.path)) rest.push(x)});
+        data = [...ordered,...rest];
+    }else{
+        data.sort((a,b)=>a.title.localeCompare(b.title));
     }
-}
-
-// 新增：模式切换
-function switchMode(mode) {
-    currentMode = mode;
-    // 切换按钮样式
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('onclick').includes(mode));
-    });
-    // 重新渲染列表
-    renderNovelList(mode);
-}
-
-// 新增：根据模式渲染列表
-function renderNovelList(mode) {
-    novelListEl.innerHTML = '';
-    
-    if (allNovelData.length === 0) {
-        novelListEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-sub);padding:40px 0;font-size:1rem">暂无小说，前往编辑器创建</div>';
+    if(data.length === 0){
+        listEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--sub)">暂无小说，前往编辑器创建</div>`;
         return;
     }
-
-    if (mode === 'book') {
-        // 书籍模式：按书籍分组
-        const bookGroups = {};
-        allNovelData.forEach(novel => {
-            if (!bookGroups[novel.book]) {
-                bookGroups[novel.book] = [];
-            }
-            bookGroups[novel.book].push(novel);
+    if(viewMode === "book"){
+        // 按书籍分组
+        const map = {};
+        data.forEach(item=>{
+            if(!map[item.book]) map[item.book] = [];
+            map[item.book].push(item);
         });
-
-        // 渲染书籍分组
-        Object.keys(bookGroups).forEach(bookName => {
-            // 书籍标题
-            const bookTitleEl = document.createElement('div');
-            bookTitleEl.style = 'grid-column:1/-1;margin:16px 0 8px;font-size:1.2rem;font-weight:600;color:var(--accent);';
-            bookTitleEl.innerHTML = `<i class="fa-solid fa-book"></i> ${bookName}`;
-            novelListEl.appendChild(bookTitleEl);
-
-            // 书籍下的篇章
-            bookGroups[bookName].forEach(novel => {
-                renderNovelCard(novel);
-            });
-        });
-    } else if (mode === 'chapter') {
-        // 所有篇章模式：平铺所有小说
-        allNovelData.forEach(novel => {
-            renderNovelCard(novel);
-        });
+        Object.keys(map).forEach(bk=>{
+            const titleDiv = document.createElement("div");
+            titleDiv.className = "book-group-title";
+            titleDiv.innerHTML = `<i class="fa-solid fa-book"></i> ${bk}`;
+            listEl.appendChild(titleDiv);
+            map[bk].forEach(item=>createCard(item,true));
+        })
+    }else{
+        // 所有篇章，显示所属书籍标签
+        data.forEach(item=>createCard(item,false));
     }
 }
-
-// 渲染单本小说卡片（含作者）
-function renderNovelCard(novel) {
-    const card = document.createElement('div');
-    card.className = 'novel-card';
-    card.onclick = () => loadNovel(novel.download_url, novel.name, novel.displayTitle, novel.author);
-    const ext = novel.name.split('.').pop().toUpperCase();
-    
-    card.innerHTML = `
-        <div class="novel-title">${novel.displayTitle}</div>
-        <div class="novel-author">作者：${novel.author}</div>
-        <div class="novel-meta">文件格式：${ext} · 点击阅读全文</div>
+// 创建卡片
+function createCard(item, hideBookTag){
+    const div = document.createElement("div");
+    div.className = "novel-card";
+    div.onclick = ()=>openRead(item);
+    div.innerHTML = `
+        ${hideBookTag ? "" : `<div class="card-book-tag">书籍：${item.book}</div>`}
+        <div class="novel-title">${item.title}</div>
+        <div class="novel-author">作者：${item.author}</div>
+        <div class="novel-meta">${item.name}</div>
     `;
-    novelListEl.appendChild(card);
+    listEl.appendChild(div);
 }
-
-// 加载小说内容（新增标题/作者参数）
-async function loadNovel(url, filename, title, author){
-    novelListEl.style.display = 'none';
-    readerView.style.display = 'block';
-    // 设置阅读页标题和作者
-    readerNovelTitle.innerText = title || filename.replace(/\.(md|txt)$/i, '');
-    readerNovelAuthor.innerText = `作者：${author || '未知作者'}`;
-    
-    contentArea.innerHTML = '<div class="loader"></div>';
-    try{
-        const res = await fetch(url);
-        const text = await res.text();
-        // 剥离元数据注释
-        const pureText = text.replace(/<!-- ZW_META:[\s\S]*? -->\n\n/,"");
-        if(/\.md$/i.test(filename)){
-            contentArea.innerHTML = marked.parse(pureText);
-        }else{
-            contentArea.innerHTML = `<div style="white-space:pre-wrap">${pureText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
-        }
-    }catch(err){
-        contentArea.innerHTML = `<p style="color:#ef4444;text-align:center;padding:30px;font-size:1rem">读取小说失败：${err.message}</p>`;
+// 打开阅读页
+function openRead(item){
+    listEl.style.display = "none";
+    reader.style.display = "block";
+    rTitle.textContent = item.title;
+    rMeta.innerHTML = `书籍：${item.book} &nbsp;|&nbsp; 作者：${item.author}`;
+    if(/\.md$/i.test(item.name)){
+        contentBox.innerHTML = marked.parse(item.raw);
+    }else{
+        contentBox.innerHTML = `<div style="white-space:pre-wrap">${item.raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>`;
     }
 }
-
-// 返回书架
-function showList(){
-    readerView.style.display = 'none';
-    novelListEl.style.display = 'grid';
+function backToList(){
+    reader.style.display = "none";
+    listEl.style.display = "grid";
 }
-
-// 应用阅读设置
-function applySettings(){
-    contentArea.style.fontSize = fontSize + 'px';
-    contentArea.style.lineHeight = lineHeight;
-    document.body.setAttribute('data-theme', currentTheme);
-    highlightBtns();
-}
-function adjustFontSize(delta){
+// 阅读设置
+function font(delta){
     fontSize = Math.max(12, Math.min(32, fontSize + delta));
-    contentArea.style.fontSize = fontSize + 'px';
-    localStorage.setItem('nw_fontSize', fontSize);
+    contentBox.style.fontSize = fontSize + "px";
+    localStorage.setItem("nw_font", fontSize);
 }
-function setLineHeight(val, btn){
-    lineHeight = val;
-    contentArea.style.lineHeight = lineHeight;
-    localStorage.setItem('nw_lineHeight', lineHeight);
-    highlightBtns();
+function setLH(val, btn){
+    lineH = val;
+    contentBox.style.lineHeight = lineH;
+    localStorage.setItem("nw_lh", lineH);
+    document.querySelectorAll(".lh").forEach(b=>b.classList.toggle("active",+b.dataset.lh === val));
 }
-function setTheme(theme, btn){
-    currentTheme = theme;
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('nw_theme', theme);
-    highlightBtns();
-}
-// 高亮激活按钮
-function highlightBtns(){
-    document.querySelectorAll('.lh-btn').forEach(b=>b.classList.toggle('active', parseFloat(b.dataset.lh) === lineHeight));
-    document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active', b.dataset.theme === currentTheme));
+function setT(t, btn){
+    theme = t;
+    document.body.dataset.theme = t;
+    localStorage.setItem("nw_theme", t);
+    document.querySelectorAll(".th").forEach(b=>b.classList.toggle("active",b.dataset.t === t));
 }
 </script>
 </body>
