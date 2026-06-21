@@ -15,79 +15,123 @@
     --accent:#5e72e4;--accent-light:rgba(94,114,228,0.12);--border:rgba(230,220,200,0.6);
     --shadow:0 6px 22px rgba(0,0,0,0.06);--radius-lg:24px;--radius-md:16px;--radius-pill:9999px;--blur:14px;
     --reader-bg:#fbf6ed;--reader-text:#5b4636;
+    --transition-base:0.3s ease;--transition-hover:0.4s ease;
 }
 [data-theme="light"]{--bg:#f4f6f9;--card:rgba(255,255,255,0.72);--text:#333;--sub:#666;--border:rgba(238,238,238,0.7);--reader-bg:#fff;--reader-text:#333;}
 [data-theme="dark"]{--bg:#121212;--card:rgba(45,45,45,0.7);--text:#e0e0e0;--sub:#aaa;--border:rgba(68,68,68,0.6);--reader-bg:#202020;--reader-text:#d0d0d0;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--text);padding:16px;transition:0.35s}
+body{font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;background:var(--bg);color:var(--text);padding:16px;transition:var(--transition-base)}
 .container{max-width:920px;margin:0 auto}
-.top-nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:20px 24px;margin-bottom:24px;background:var(--card);border-radius:var(--radius-lg);backdrop-filter:blur(var(--blur));box-shadow:var(--shadow);border:1px solid var(--border)}
-.nav-brand h1{display:flex;align-items:center;gap:8px;font-size:1.6rem;color:var(--accent)}
-.nav-links{display:flex;gap:12;flex-wrap:wrap}
-.nav-links a{text-decoration:none;color:var(--sub);font-size:0.88rem;padding:9px 18px;border:1px solid var(--border);border-radius:var(--radius-pill);display:flex;gap:7px;align-items:center}
-.nav-links a:hover{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 12px rgba(94,114,228,0.3)}
-.search-bar{width:100%;margin-bottom:16px;display:flex;gap:10px}
-#searchInput{flex:1;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--card);color:var(--text);font-size:0.95rem;outline:none}
-#searchBtn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);cursor:pointer}
+/* 顶部导航优化 */
+.top-nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:20px 24px;margin-bottom:24px;background:var(--card);border-radius:var(--radius-lg);backdrop-filter:blur(var(--blur));box-shadow:var(--shadow);border:1px solid var(--border);transition:var(--transition-base)}
+.nav-brand h1{display:flex;align-items:center;gap:8px;font-size:1.6rem;color:var(--accent);font-weight:700}
+.nav-links{display:flex;gap:12px;flex-wrap:wrap} /* 修复gap缺少单位 */
+.nav-links a{text-decoration:none;color:var(--sub);font-size:0.88rem;padding:9px 18px;border:1px solid var(--border);border-radius:var(--radius-pill);display:flex;gap:7px;align-items:center;transition:var(--transition-hover)}
+.nav-links a:hover{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 16px rgba(94,114,228,0.35);transform:translateY(-2px)}
+
+/* 搜索栏优化 */
+.search-bar{width:100%;margin-bottom:16px;display:flex;gap:10px;align-items:center}
+#searchInput{flex:1;padding:12px 20px;border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--card);color:var(--text);font-size:0.95rem;outline:none;transition:var(--transition-base)}
+#searchInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+#searchBtn{padding:12px 24px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);cursor:pointer;transition:var(--transition-hover);font-weight:500}
+#searchBtn:hover{background:#4a61d0;box-shadow:0 4px 12px rgba(94,114,228,0.4)}
+
+/* 模式操作栏优化 */
 .mode-action-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:20px}
 .mode-btn,.sort-select,.setting-btn,.theme-btn,.page-btn{
-    padding:9px 18px;border:1px solid var(--border);border-radius:14px !important;
-    background:transparent;color:var(--text);cursor:pointer;font-size:0.88rem;transition:0.2s
+    padding:10px 20px;border:1px solid var(--border);border-radius:14px !important;
+    background:transparent;color:var(--text);cursor:pointer;font-size:0.88rem;transition:var(--transition-hover);font-weight:500
 }
-.mode-btn:hover,.setting-btn:hover,.theme-btn:hover,.page-btn:hover{background:var(--accent-light)}
+.mode-btn:hover,.setting-btn:hover,.theme-btn:hover,.page-btn:hover{background:var(--accent-light);transform:translateY(-1px)}
 .mode-btn.active,.setting-btn.active,.theme-btn.active,.page-btn.active{
     background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 12px rgba(94,114,228,0.32)
 }
+
+/* 操作按钮优化 */
 .action-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .action-bar .btn-write,.action-bar .btn-setting{
-    display:inline-flex;align-items:center;gap:8px;color:#fff;padding:13px 28px;border-radius:var(--radius-pill);text-decoration:none;font-size:0.98rem;font-weight:600;box-shadow:0 6px 16px rgba(94,114,228,0.35);border:none;cursor:pointer
+    display:inline-flex;align-items:center;gap:8px;color:#fff;padding:13px 28px;border-radius:var(--radius-pill);text-decoration:none;font-size:0.98rem;font-weight:600;box-shadow:0 6px 16px rgba(94,114,228,0.35);border:none;cursor:pointer;transition:var(--transition-hover)
 }
 .btn-write{background:var(--accent)}
 .btn-setting{background:#7286e9}
-.btn-write:hover,.btn-setting:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(94,114,228,0.42);color:#fff}
-.status{text-align:center;color:var(--sub);padding:10px;margin-bottom:20px}
-.loader{width:36px;height:36px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;margin:24px auto;animation:spin 1s linear infinite}
+.btn-write:hover,.btn-setting:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(94,114,228,0.42);color:#fff;opacity:0.95}
+
+/* 状态和加载动画优化 */
+.status{text-align:center;color:var(--sub);padding:10px;margin-bottom:20px;font-size:0.95rem}
+.loader{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;margin:24px auto;animation:spin 1s linear infinite;position:relative}
+.loader::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;background:var(--accent);border-radius:50%}
 @keyframes spin{to{transform:rotate(360deg)}}
-.novel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
-.book-group-title{grid-column:1/-1;margin:16px 0 8px;font-size:1.2rem;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:8px}
-.novel-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;cursor:pointer;transition:transform 0.24s;backdrop-filter:blur(var(--blur))}
-.novel-card:hover{transform:translateY(-6px);box-shadow:0 12px 28px rgba(0,0,0.1);border-color:var(--accent)}
-.card-book-tag{font-size:0.78rem;color:var(--accent);margin-bottom:6px}
-.novel-title{font-size:1.18rem;font-weight:600;margin-bottom:8px}
+
+/* 小说网格和卡片优化 */
+.novel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px;margin-bottom:32px}
+.book-group-title{grid-column:1/-1;margin:16px 0 12px;font-size:1.3rem;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.novel-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;cursor:pointer;transition:all var(--transition-hover);backdrop-filter:blur(var(--blur));position:relative;overflow:hidden}
+.novel-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:4px;background:var(--accent);transform:scaleX(0);transition:transform var(--transition-hover);transform-origin:left}
+.novel-card:hover{transform:translateY(-6px);box-shadow:0 12px 32px rgba(0,0,0,0.12);border-color:var(--accent);}
+.novel-card:hover::before{transform:scaleX(1)}
+.card-book-tag{font-size:0.78rem;color:var(--accent);margin-bottom:6px;font-weight:500}
+.novel-title{font-size:1.18rem;font-weight:600;margin-bottom:8px;line-height:1.4}
 .novel-author{font-size:0.82rem;color:var(--sub);margin-bottom:12px}
-.novel-meta{font-size:0.86rem;color:var(--sub);padding-top:12px;border-top:1px solid var(--border)}
-#reader-view{display:none;background:var(--card);padding:28px;border-radius:var(--radius-lg);box-shadow:var(--shadow);backdrop-filter:blur(var(--blur));border:1px solid var(--border)}
-.reader-title{font-size:1.8rem;font-weight:600;color:var(--accent);text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.reader-m{text-align:center;color:var(--sub);margin-bottom:24px;line-height:1.6}
-.back-btn{background:transparent;border:1px solid var(--border);color:var(--accent);padding:10px 20px;border-radius:14px;cursor:pointer;margin-bottom:24px;font-size:1rem}
-.back-btn:hover{background:var(--accent);color:#fff}
-.settings-panel{display:flex;flex-wrap:wrap;gap:12px;padding:18px 22px;background:rgba(0,0,0,0.03);border-radius:var(--radius-md);margin-bottom:28px;border:1px solid var(--border)}
-.settings-panel span{color:var(--sub);font-size:0.94rem}
-#content-area{line-height:1.8;word-break:break-word;padding:8px 4px;min-height:400px}
-.page-control{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
-.page-info{color:var(--sub)}
+.novel-meta{font-size:0.86rem;color:var(--sub);padding-top:12px;border-top:1px solid var(--border);opacity:0.8}
+
+/* 阅读视图优化 */
+#reader-view{display:none;background:var(--reader-bg);padding:32px;border-radius:var(--radius-lg);box-shadow:var(--shadow);backdrop-filter:blur(var(--blur));border:1px solid var(--border);margin-top:20px}
+.reader-title{font-size:1.8rem;font-weight:700;color:var(--accent);text-align:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);line-height:1.5}
+.reader-m{text-align:center;color:var(--sub);margin-bottom:24px;line-height:1.6;font-size:0.95rem}
+.back-btn{background:transparent;border:1px solid var(--border);color:var(--accent);padding:10px 20px;border-radius:14px;cursor:pointer;margin-bottom:24px;font-size:1rem;transition:var(--transition-hover)}
+.back-btn:hover{background:var(--accent);color:#fff;transform:translateY(-2px)}
+
+/* 设置面板优化 */
+.settings-panel{display:flex;flex-wrap:wrap;gap:16px;padding:20px 24px;background:rgba(0,0,0,0.03);border-radius:var(--radius-md);margin-bottom:28px;border:1px solid var(--border);align-items:center}
+.settings-panel span{color:var(--sub);font-size:0.94rem;white-space:nowrap}
+#content-area{line-height:1.8;word-break:break-word;padding:16px 8px;min-height:400px;color:var(--reader-text);font-size:18px;border-radius:var(--radius-md);background:transparent}
+/* Markdown内容样式适配 */
+#content-area h1,#content-area h2,#content-area h3{color:var(--accent);margin:16px 0 8px}
+#content-area p{margin-bottom:12px;line-height:inherit}
+#content-area pre{background:rgba(0,0,0,0.05);padding:16px;border-radius:8px;margin:12px 0;overflow-x:auto}
+#content-area code{background:rgba(0,0,0,0.05);padding:2px 6px;border-radius:4px}
+
+/* 分页控制优化 */
+.page-control{display:flex;gap:16px;justify-content:center;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
+.page-info{color:var(--sub);font-size:0.95rem}
+
+/* 模态框优化 */
 .set-modal{
-    position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:999;display:none;align-items:center;justify-content:center;
+    position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);
 }
 .set-box{
-    width:92%;max-width:600px;background:var(--card);border-radius:var(--radius-lg);padding:30px;border:1px solid var(--border);box-shadow:0 10px 40px rgba(0,0,0.15)
+    width:92%;max-width:600px;background:var(--card);border-radius:var(--radius-lg);padding:32px;border:1px solid var(--border);box-shadow:0 12px 40px rgba(0,0,0,0.18);transition:var(--transition-base);transform:translateY(-10px);opacity:0;animation:modalFadeIn 0.3s forwards;
 }
-.set-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.set-header h2{margin:0}
-.close-set{border:none;background:transparent;font-size:1.6rem;cursor:pointer;color:var(--sub)}
-.set-item{margin-bottom:20px}
-.set-item label{display:block;margin-bottom:8px;color:var(--sub)}
+@keyframes modalFadeIn {
+    to {transform:translateY(0);opacity:1}
+}
+.set-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.set-header h2{margin:0;color:var(--accent);font-weight:700}
+.close-set{border:none;background:transparent;font-size:1.8rem;cursor:pointer;color:var(--sub);width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:var(--transition-base)}
+.close-set:hover{background:var(--accent-light);color:var(--accent)}
+.set-item{margin-bottom:24px}
+.set-item label{display:block;margin-bottom:8px;color:var(--sub);font-weight:500}
 .set-item select,.set-item input{
-    width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--text)
+    width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--text);font-size:0.95rem;transition:var(--transition-base)
 }
-.save-set{margin-top:20px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:1rem;cursor:pointer}
-.error-msg{color:#e74c3c;background:rgba(231,76,60,0.1);padding:12px 20px;border-radius:12px;margin-bottom:20px;text-align:center;display:none}
+.set-item select:focus,.set-item input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);outline:none}
+.save-set{margin-top:8px;width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:1rem;cursor:pointer;transition:var(--transition-hover);font-weight:600}
+.save-set:hover{background:#4a61d0;transform:translateY(-2px);box-shadow:0 6px 16px rgba(94,114,228,0.4)}
+
+/* 错误提示优化 */
+.error-msg{color:#e74c3c;background:rgba(231,76,60,0.1);padding:16px 20px;border-radius:12px;margin-bottom:20px;text-align:center;display:none;border:1px solid rgba(231,76,60,0.2);font-weight:500}
+
+/* 响应式优化 */
 @media(max-width:768px){
     body{padding:12px}
-    .top-nav{flex-direction:column;text-align:center}
+    .top-nav{flex-direction:column;text-align:center;padding:16px 20px}
     .mode-action-bar{flex-direction:column;align-items:stretch}
-    .novel-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+    .novel-grid{grid-template-columns:repeat(auto-fill,minmax(100%,1fr));gap:16px}
     #reader-view{padding:20px 16px}
+    .settings-panel{gap:12px;padding:16px}
+    .set-box{padding:24px}
+    .action-bar{width:100%;justify-content:center}
+    .btn-write,.btn-setting{width:100%;justify-content:center}
 }
 </style>
 </head>
@@ -98,12 +142,12 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
         <div class="nav-links">
             <a href="https://youreln.github.io/Cloudpad/" target="_blank"><i class="fa-solid fa-pen"></i>云笺编辑器</a>
         </div>
-    </div>
+    </nav>
 
     <div class="search-bar">
         <input id="searchInput" placeholder="搜索标题/作者/书籍/正文">
-        <button id="searchBtn" onclick="doSearch()">搜索</button>
-        <button class="mode-btn" onclick="resetSearch()">重置</button>
+        <button id="searchBtn" onclick="doSearch()"><i class="fa-solid fa-magnifying-glass"></i> 搜索</button>
+        <button class="mode-btn" onclick="resetSearch()"><i class="fa-solid fa-refresh"></i> 重置</button>
     </div>
 
     <div class="mode-action-bar">
@@ -138,22 +182,22 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
             <span style="margin-left:10px">单页字数</span>
             <input type="number" id="pageWord" value="1200" min="400" max="3000" style="width:90px">
             <span style="margin-left:10px">字号</span>
-            <button class="setting-btn" onclick="font(-2)">A-</button>
-            <button class="setting-btn" onclick="font(2)">A+</button>
+            <button class="setting-btn" onclick="font(-2)"><i class="fa-solid fa-font-down"></i> A-</button>
+            <button class="setting-btn" onclick="font(2)"><i class="fa-solid fa-font-up"></i> A+</button>
             <span style="margin-left:10px">行距</span>
             <button class="setting-btn lh" data-lh="1.5" onclick="setLH(1.5,this)">紧凑</button>
             <button class="setting-btn lh active" data-lh="1.8" onclick="setLH(1.8,this)">适中</button>
             <button class="setting-btn lh" data-lh="2.2" onclick="setLH(2.2,this)">宽松</button>
             <span style="margin-left:10px">主题</span>
-            <button class="theme-btn" data-t="light" onclick="setT('light',this)">☀日间</button>
-            <button class="theme-btn active" data-t="sepia" onclick="setT('sepia',this)">📖护眼</button>
-            <button class="theme-btn" data-t="dark" onclick="setT('dark',this)">🌙夜间</button>
+            <button class="theme-btn" data-t="light" onclick="setT('light',this)">☀ 日间</button>
+            <button class="theme-btn active" data-t="sepia" onclick="setT('sepia',this)">📖 护眼</button>
+            <button class="theme-btn" data-t="dark" onclick="setT('dark',this)">🌙 夜间</button>
         </div>
         <div id="content-area"></div>
         <div class="page-control" id="pageCtrl" style="display:none">
-            <button class="page-btn" onclick="prevPage()">上一页</button>
+            <button class="page-btn" onclick="prevPage()"><i class="fa-solid fa-chevron-left"></i> 上一页</button>
             <span class="page-info">第 <span id="curPage">1</span> / <span id="totalPage">1</span> 页</span>
-            <button class="page-btn" onclick="nextPage()">下一页</button>
+            <button class="page-btn" onclick="nextPage()">下一页 <i class="fa-solid fa-chevron-right"></i></button>
         </div>
     </div>
 </div>
@@ -209,7 +253,7 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
             <label>分页默认字数</label>
             <input id="defWord" type="number" min="400" max="3000" value="1200">
         </div>
-        <button class="save-set" onclick="saveGlobalSet()">保存默认设置</button>
+        <button class="save-set" onclick="saveGlobalSet()"><i class="fa-solid fa-save"></i> 保存默认设置</button>
     </div>
 </div>
 
@@ -235,6 +279,7 @@ const globalSet = JSON.parse(localStorage.getItem("novelGlobalSet")) || {
     defFont:18,defLH:1.8,defTheme:"sepia",defSort:"custom",defView:"book",defWord:1200
 };
 
+// DOM元素获取（修复pageWordInput错误）
 const listEl = document.getElementById("novel-list");
 const status = document.getElementById("status-msg");
 const loader = document.getElementById("loader");
@@ -248,20 +293,43 @@ const setModal = document.getElementById("setModal");
 const pageCtrl = document.getElementById("pageCtrl");
 const curPageDom = document.getElementById("curPage");
 const totalPageDom = document.getElementById("totalPage");
-const pageWordInput = document.getElementById("error-msg");
+const pageWordInput = document.getElementById("pageWord"); // 修复元素获取
 const errorEl = document.getElementById("error-msg");
 
-// 剥离ZW_META注释（补充缺失函数）
+// 剥离ZW_META注释
 function stripMeta(txt){
     return txt.replace(/<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->\n\n/g,"");
 }
+
 // 显示错误提示
 function showErr(msg){
     errorEl.textContent = msg;
     errorEl.style.display = "block";
+    // 隐藏加载动画
+    loader.style.display = "none";
+    status.style.display = "none";
 }
+
 function hideErr(){
     errorEl.style.display = "none";
+}
+
+// 重试请求函数（处理Github API速率限制）
+async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
+    try {
+        const response = await fetch(url, options);
+        if (response.status === 403 && response.headers.get('X-RateLimit-Remaining') === '0') {
+            throw new Error(`API速率限制已达，剩余重置时间：${new Date(response.headers.get('X-RateLimit-Reset') * 1000).toLocaleString()}`);
+        }
+        if (!response.ok) throw new Error(`HTTP错误：${response.status} ${response.statusText}`);
+        return response;
+    } catch (error) {
+        if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return fetchWithRetry(url, options, retries - 1, delay * 2);
+        }
+        throw error;
+    }
 }
 
 window.onload = ()=>{
@@ -275,6 +343,7 @@ window.onload = ()=>{
     pageWordInput.value = pageWord;
     sortSel.value = sortMode;
 
+    // 初始化全局设置表单
     document.getElementById("defFont").value = globalSet.defFont;
     document.getElementById("defLH").value = globalSet.defLH;
     document.getElementById("defTheme").value = globalSet.defTheme;
@@ -282,150 +351,253 @@ window.onload = ()=>{
     document.getElementById("defView").value = globalSet.defView;
     document.getElementById("defWord").value = globalSet.defWord;
 
+    // 应用初始样式
     document.body.dataset.theme = theme;
     contentBox.style.fontSize = fontSize + "px";
     contentBox.style.lineHeight = lineH;
+    
+    // 绑定事件
     bindSortChange();
     bindSearchEnter();
     renderModeBtn();
+    
+    // 加载数据（增加错误处理）
     loadAllData().catch(e=>{
         showErr("加载失败："+e.message);
-        loader.style.display = "none";
+        console.error("加载错误详情：", e);
     });
 }
+
+// 排序变更绑定
 function bindSortChange(){
     sortSel.onchange = ()=>{
         sortMode = sortSel.value;
         render();
     }
 }
+
+// 搜索回车绑定
 function bindSearchEnter(){
-    searchInput.addEventListener("keydown",e=>e.key==="Enter"&&doSearch())
+    searchInput.addEventListener("keydown",e=>{
+        if(e.key==="Enter") doSearch();
+    })
 }
+
+// 渲染激活状态按钮
 function renderModeBtn(){
-    document.querySelectorAll(".mode-btn").forEach(b=>b.classList.toggle("active",b.getAttribute("onclick").includes(`'${viewMode}'`)));
-    document.querySelectorAll(".setting-btn[data-read]").forEach(b=>b.classList.toggle("active",b.dataset.read===readMode));
-    document.querySelectorAll(".lh").forEach(b=>b.classList.toggle("active",+b.dataset.lh===lineH));
-    document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.t===theme));
+    // 视图模式
+    document.querySelectorAll(".mode-btn").forEach(b=>{
+        b.classList.toggle("active", b.getAttribute("onclick").includes(`'${viewMode}'`));
+    });
+    // 阅读模式
+    document.querySelectorAll(".setting-btn[data-read]").forEach(b=>{
+        b.classList.toggle("active", b.dataset.read===readMode);
+    });
+    // 行距
+    document.querySelectorAll(".lh").forEach(b=>{
+        b.classList.toggle("active", +b.dataset.lh===lineH);
+    });
+    // 主题
+    document.querySelectorAll(".theme-btn").forEach(b=>{
+        b.classList.toggle("active", b.dataset.t===theme);
+    });
 }
-function openSetModal(){setModal.style.display="flex"}
-function closeSetModal(){setModal.style.display="none"}
+
+// 打开设置模态框
+function openSetModal(){
+    setModal.style.display="flex";
+}
+
+// 关闭设置模态框
+function closeSetModal(){
+    setModal.style.display="none";
+}
+
+// 保存全局设置（修复defView取值）
 function saveGlobalSet(){
-    const s = {
-        defFont:+document.getElementById("defFont").value,
-        defLH:+document.getElementById("defLH").value,
-        defTheme:document.getElementById("defTheme").value,
-        defSort:document.getElementById("defSort").value,
-        defView:document.getElementById("defView"),
-        defWord:+document.getElementById("defWord").value
-    };
-    localStorage.setItem("novelGlobalSet",JSON.stringify(s));
-    alert("设置保存成功，刷新生效");
-    closeSetModal();
+    try {
+        const s = {
+            defFont:+document.getElementById("defFont").value,
+            defLH:+document.getElementById("defLH").value,
+            defTheme:document.getElementById("defTheme").value,
+            defSort:document.getElementById("defSort").value,
+            defView:document.getElementById("defView").value, // 修复取值
+            defWord:+document.getElementById("defWord").value
+        };
+        localStorage.setItem("novelGlobalSet",JSON.stringify(s));
+        alert("设置保存成功，刷新页面后生效");
+        closeSetModal();
+    } catch (e) {
+        showErr("保存设置失败：" + e.message);
+    }
 }
+
+// 切换阅读模式
 function switchReadMode(mode,btn){
     readMode = mode;
     renderModeBtn();
+    const rawContent = contentBox.innerText || contentBox.innerHTML.replace(/<[^>]+>/g, ''); // 提取纯文本
     if(mode==="page"){
-        splitPage(contentBox.innerText || contentBox.innerHTML);
+        splitPage(rawContent);
         pageCtrl.style.display="flex";
     }else{
         pageCtrl.style.display="none";
         curPageIdx=0;
     }
 }
+
+// 分页拆分（优化字数计算）
 function splitPage(rawText){
-    const wordNum = +pageWordInput.value;
-    pageList = [];
-    let temp = "";
-    let count = 0;
-    for(let c of rawText){
-        temp += c;
-        if(/\s/.test(c)) count++;
-        else count++;
-        if(count >= wordNum){
-            pageList.push(temp);
-            temp = "";count=0;
+    try {
+        const wordNum = Math.max(400, Math.min(3000, +pageWordInput.value || 1200)); // 边界限制
+        pageList = [];
+        let temp = "";
+        let count = 0;
+        
+        // 纯文本处理（去除HTML标签）
+        const cleanText = rawText.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        
+        for(let c of cleanText){
+            temp += c;
+            count++; // 每个字符计为1
+            if(count >= wordNum){
+                pageList.push(temp);
+                temp = "";
+                count=0;
+            }
         }
+        if(temp) pageList.push(temp);
+        curPageIdx = 0;
+        renderPage();
+    } catch (e) {
+        showErr("分页处理失败：" + e.message);
     }
-    if(temp) pageList.push(temp);
-    curPageIdx = 0;
-    renderPage();
 }
+
+// 渲染分页内容
 function renderPage(){
-    if(pageList.length===0){contentBox.innerText="暂无内容";return}
+    if(pageList.length===0){
+        contentBox.innerText="暂无内容";
+        return;
+    }
+    // 防止越界
+    curPageIdx = Math.max(0, Math.min(curPageIdx, pageList.length - 1));
     contentBox.innerText = pageList[curPageIdx];
     curPageDom.textContent = curPageIdx+1;
     totalPageDom.textContent = pageList.length;
 }
+
+// 上一页
 function prevPage(){
-    if(curPageIdx>0){curPageIdx--;renderPage()}
+    if(curPageIdx>0){
+        curPageIdx--;
+        renderPage();
+    }
 }
+
+// 下一页（修复越界判断）
 function nextPage(){
-    if(curPageIdx < pageList.length){curPageIdx++;renderPage()}
+    if(curPageIdx < pageList.length - 1){ // 修复判断条件
+        curPageIdx++;
+        renderPage();
+    }
 }
-// 文件白名单 仅md/txt，彻底过滤二进制
+
+// 文件白名单 仅md/txt
 function isTextFile(name){
     const low = name.toLowerCase();
     return low.endsWith(".md") || low.endsWith(".txt");
 }
-// 递归扫描目录：只拿元信息，不读取contents内容（根治415）
+
+// 递归扫描目录
 async function scanFolder(path){
-    const res = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/${encodeURI(path)}`);
-    if(!res.ok) return [];
-    const arr = await res.json();
-    let out = [];
-    for(let item of arr){
-        const fn = decodeURIComponent(item.name);
-        const fullPath = decodeURIComponent(item.path);
-        if(fn.startsWith(".") || fn === "sort.json") continue;
-        if(item.type === "dir"){
-            const sub = await scanFolder(fullPath);
-            out.push(...sub);
-        }else if(item.type === "file" && isTextFile(fn)){
-            out.push({
-                path:fullPath,
-                name:fn,
-                rawUrl:item.download_url,
-                modifyTime:item.modified || "1970-01-01T00:00:00Z"
-            });
+    try {
+        const res = await fetchWithRetry(`${GH_API}/${GH_USER}/${GH_REPO}/contents/${encodeURI(path)}`);
+        const arr = await res.json();
+        let out = [];
+        for(let item of arr){
+            const fn = decodeURIComponent(item.name);
+            const fullPath = decodeURIComponent(item.path);
+            // 跳过隐藏文件和sort.json
+            if(fn.startsWith(".") || fn === "sort.json") continue;
+            if(item.type === "dir"){
+                const sub = await scanFolder(fullPath);
+                out.push(...sub);
+            }else if(item.type === "file" && isTextFile(fn)){
+                out.push({
+                    path:fullPath,
+                    name:fn,
+                    rawUrl:item.download_url,
+                    modifyTime:item.modified || item.updated_at || "1970-01-01T00:00:00Z" // 兼容字段
+                });
+            }
         }
+        return out;
+    } catch (e) {
+        console.warn("扫描目录失败", path, e);
+        return [];
     }
-    return out;
 }
+
 // 解析元数据
 function parseMeta(raw,filePath){
     const reg = /<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->/;
     const m = raw.match(reg);
     let meta = {title:"",author:"",book:"未分类"};
     if(m){
-        try{meta = JSON.parse(m[1])}catch{}
+        try{
+            meta = JSON.parse(m[1]);
+        }catch(e){
+            console.warn("解析元数据失败", filePath, e);
+        }
     }
+    // 自动从路径提取书籍名
     const seg = filePath.replace("novel/","").split("/");
     if(seg.length >=2 && !meta.book) meta.book = seg[0];
     return meta;
 }
+
+// 加载所有数据
 async function loadAllData(){
     hideErr();
     loader.style.display = "block";
-    status.textContent = "读取sort.json";
+    status.textContent = "读取sort.json...";
     sortOrder = [];
+    
+    // 读取sort.json
     try{
-        const sRes = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/novel/sort.json`);
+        const sRes = await fetchWithRetry(`${GH_API}/${GH_USER}/${GH_REPO}/contents/novel/sort.json`);
         if(sRes.ok){
             const json = await sRes.json();
-            if(Array.isArray(json.order)) sortOrder = json.order.map(p=>decodeURIComponent(p));
+            // 处理base64编码的内容
+            const content = atob(json.content);
+            const sortJson = JSON.parse(content);
+            if(Array.isArray(sortJson.order)) sortOrder = sortJson.order.map(p=>decodeURIComponent(p));
         }
-    }catch(e){console.log("无sort.json")}
-    status.textContent = "扫描小说目录";
+    }catch(e){
+        console.log("无sort.json或读取失败，使用默认排序：", e);
+    }
+
+    // 扫描小说目录
+    status.textContent = "扫描小说目录...";
     const files = await scanFolder("novel");
+    if(files.length === 0){
+        status.textContent = "未找到小说文件";
+        loader.style.display = "none";
+        return;
+    }
+
+    // 加载文件内容
+    status.textContent = `加载中(${0}/${files.length})...`;
     allNovel = [];
-    // 单独用download_url读取文本，避开contents二进制415
-    for(let f of files){
+    for(let i=0; i<files.length; i++){
+        const f = files[i];
+        // 更新加载状态
+        status.textContent = `加载中(${i+1}/${files.length})...`;
         try{
-            const txtRes = await fetch(f.rawUrl);
+            const txtRes = await fetchWithRetry(f.rawUrl);
             if(!txtRes.ok) continue;
-            const rawTxt = await txt.text();
+            const rawTxt = await txtRes.text();
             const meta = parseMeta(rawTxt,f.path);
             const cleanTxt = stripMeta(rawTxt);
             allNovel.push({
@@ -443,35 +615,53 @@ async function loadAllData(){
             continue;
         }
     }
+
+    // 完成加载
     filterNovel = [...allNovel];
     loader.style.display = "none";
     status.style.display = "none";
     render();
 }
+
+// 切换视图模式
 function switchView(mode){
     viewMode = mode;
     renderModeBtn();
     render();
 }
+
+// 执行搜索
 function doSearch(){
     const key = searchInput.value.trim().toLowerCase();
-    if(!key){filterNovel=[...allNovel];render();return}
+    hideErr();
+    if(!key){
+        filterNovel=[...allNovel];
+        render();
+        return;
+    }
+    // 多维度搜索
     filterNovel = allNovel.filter(item=>{
         return item.title.toLowerCase().includes(key)
         || item.author.toLowerCase().includes(key)
         || item.book.toLowerCase().includes(key)
         || item.raw.toLowerCase().includes(key);
     });
+    render();
 }
+
+// 重置搜索
 function resetSearch(){
     searchInput.value="";
     filterNovel=[...allNovel];
     render();
 }
+
+// 渲染列表（修复view变量为viewMode）
 function render(){
     listEl.innerHTML = "";
     let data = [...filterNovel];
-    // 三种排序
+    
+    // 排序逻辑
     if(sortMode === "custom"){
         const ord=[],rest=[];
         sortOrder.forEach(p=>{
@@ -481,66 +671,109 @@ function render(){
         data.forEach(x=>{if(!ord.find(i=>i.path===x.path)) rest.push(x)});
         data = [...ord,...rest];
     }else if(sortMode === "name"){
-        data.sort((a,b)=>a.name.localeCompare(b.name));
+        data.sort((a,b)=>a.name.localeCompare(b.name, 'zh-CN')); // 中文排序
     }else if(sortMode === "time"){
         data.sort((a,b)=>b.modifyTs - a.modifyTs);
     }
+
+    // 空数据处理
     if(data.length === 0){
-        listEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--sub)">无匹配小说</div>`;
+        listEl.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--sub)">
+                <i class="fa-solid fa-book-open-reader" style="font-size:4rem;margin-bottom:16px;opacity:0.5"></i>
+                <div style="font-size:1.1rem;margin-bottom:8px">无匹配小说</div>
+                <div style="font-size:0.9rem">请尝试调整搜索关键词或筛选条件</div>
+            </div>
+        `;
         return;
     }
-    if(view === "book"){
+
+    // 渲染视图（修复view为viewMode）
+    if(viewMode === "book"){
+        // 书籍模式：按书籍分组
         const map = {};
-        data.forEach(i=>{if(!map[i.book])map[i.book]=[];map[i.book].push(i)});
+        data.forEach(i=>{
+            if(!map[i.book]) map[i.book] = [];
+            map[i.book].push(i);
+        });
+        // 遍历书籍分组
         Object.keys(map).forEach(bk=>{
             const div = document.createElement("div");
             div.className="book-group-title";
-            div.innerHTML = `<i class="fa-solid fa-book"></i> ${bk}`;
+            div.innerHTML = `<i class="fa-solid fa-book"></i> ${bk} (${map[bk].length}篇)`;
             listEl.appendChild(div);
             map[bk].forEach(item=>createCard(item,true));
         })
     }else{
+        // 篇章模式：全部展示
         data.forEach(item=>createCard(item,false));
     }
 }
+
+// 创建小说卡片
 function createCard(item,hideBook){
     const div = document.createElement("div");
     div.className="novel-card";
     div.onclick = ()=>openRead(item);
     div.innerHTML = `
-        ${hideBook ? "" : `<div class="card-book-tag">书籍：${item.book}</div>`}
+        ${hideBook ? "" : `<div class="card-book-tag">📚 ${item.book}</div>`}
         <div class="novel-title">${item.title}</div>
-        <div class="novel-author">作者：${item.author}</div>
-        <div class="novel-meta">${item.name}</div>
+        <div class="novel-author">✍️ ${item.author}</div>
+        <div class="novel-meta">📄 ${item.name} | 🕒 ${new Date(item.modifyTs).toLocaleDateString()}</div>
     `;
     listEl.appendChild(div);
 }
+
+// 打开阅读视图
 function openRead(item){
-    listEl.style.display="none";
-    reader.style.display="block";
-    rTitle.textContent = item.title;
-    rMeta.innerHTML = `书籍：${item.book} &nbsp;|&nbsp; 作者：${item.author}`;
-    if(item.name.toLowerCase().endsWith(".md")){
-        contentBox.innerHTML = marked.parse(item.raw);
-    }else{
-        contentBox.innerHTML = `<pre style="white-space:pre-wrap">${item.raw.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</pre>`;
+    try {
+        listEl.style.display="none";
+        reader.style.display="block";
+        rTitle.textContent = item.title;
+        rMeta.innerHTML = `书籍：${item.book} &nbsp;|&nbsp; 作者：${item.author} &nbsp;|&nbsp; 文件：${item.name}`;
+        
+        // 渲染内容（Markdown或纯文本）
+        if(item.name.toLowerCase().endsWith(".md")){
+            contentBox.innerHTML = marked.parse(item.raw);
+        }else{
+            // 纯文本转义
+            const escaped = item.raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\n/g,"<br>");
+            contentBox.innerHTML = `<div style="white-space:pre-wrap">${escaped}</div>`;
+        }
+        
+        // 重置分页
+        curPageIdx=0;
+        if(readMode==="page"){
+            splitPage(item.raw);
+            pageCtrl.style.display="flex";
+        }else{
+            pageCtrl.style.display="none";
+        }
+    } catch (e) {
+        showErr("打开阅读视图失败：" + e.message);
     }
-    curPageIdx=0;
-    if(readMode==="page"){splitPage(item.raw);pageCtrl.style.display="flex"}else pageCtrl.style.display="none";
 }
+
+// 返回列表
 function backToList(){
     reader.style.display="none";
     listEl.style.display="grid";
 }
+
+// 调整字号
 function font(delta){
     fontSize = Math.max(12,Math.min(32,fontSize+delta));
     contentBox.style.fontSize = fontSize + "px";
 }
+
+// 设置行距
 function setLH(val,btn){
     lineH = val;
     contentBox.style.lineHeight = lineH;
     renderModeBtn();
 }
+
+// 设置主题
 function setT(t,btn){
     theme = t;
     document.body.dataset.theme = t;
