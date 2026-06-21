@@ -12,12 +12,12 @@
 <style>
 :root {
     --bg:#f4ecd8;--card:rgba(251,246,237,0.75);--text:#5b4636;--sub:#8b7355;
-    --accent:#5e72e4;--accent-light:rgba(94,114,228,0.12);--border:rgba(230,220,0.6);
+    --accent:#5e72e4;--accent-light:rgba(94,114,228,0.12);--border:rgba(230,220,200,0.6);
     --shadow:0 6px 22px rgba(0,0,0,0.06);--radius-lg:24px;--radius-md:16px;--radius-pill:9999px;--blur:14px;
     --reader-bg:#fbf6ed;--reader-text:#5b4636;
 }
 [data-theme="light"]{--bg:#f4f6f9;--card:rgba(255,255,255,0.72);--text:#333;--sub:#666;--border:rgba(238,238,238,0.7);--reader-bg:#fff;--reader-text:#333;}
-[data-theme="dark"]{--bg:#121212;--card:rgba(45,45,45,0.7);--text:#e0e0e0;--sub:#aaa;--border:rgba(68,68,0.6);--reader-bg:#202020;--reader-text:#d0d0d0;}
+[data-theme="dark"]{--bg:#121212;--card:rgba(45,45,45,0.7);--text:#e0e0e0;--sub:#aaa;--border:rgba(68,68,68,0.6);--reader-bg:#202020;--reader-text:#d0d0d0;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--text);padding:16px;transition:0.35s}
 .container{max-width:920px;margin:0 auto}
@@ -28,9 +28,8 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
 .nav-links a:hover{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 12px rgba(94,114,228,0.3)}
 .search-bar{width:100%;margin-bottom:16px;display:flex;gap:10px}
 #searchInput{flex:1;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--card);color:var(--text);font-size:0.95rem;outline:none}
-#searchBtn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);cursor-pointer}
+#searchBtn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);cursor:pointer}
 .mode-action-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:20px}
-.mode-switch{display:flex;gap:10px;align-items:center}
 .mode-btn,.sort-select,.setting-btn,.theme-btn,.page-btn{
     padding:9px 18px;border:1px solid var(--border);border-radius:14px !important;
     background:transparent;color:var(--text);cursor:pointer;font-size:0.88rem;transition:0.2s
@@ -190,7 +189,7 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
             </select>
         </div>
         <div class="set-item">
-            <label>默认排序方式</label>
+            <label>默认排序</label>
             <select id="defSort">
                 <option value="custom" selected>自定义sort.json</option>
                 <option value="name">文件名升序</option>
@@ -229,9 +228,9 @@ let pageWord = 1200;
 let pageList = [];
 let curPageIdx = 0;
 
-// 全局设置读取
+// 全局配置存储（修复1：统一变量名globalSet，无global错误）
 const globalSet = JSON.parse(localStorage.getItem("novelGlobalSet")) || {
-    defFont:18,defLH:1.8,defTheme:"sepia",defSort:"custom",defView:"book",defWord:120
+    defFont:18,defLH:1.8,defTheme:"sepia",defSort:"custom",defView:"book",defWord:1200
 };
 
 const listEl = document.getElementById("novel-list");
@@ -249,23 +248,28 @@ const curPageDom = document.getElementById("curPage");
 const totalPageDom = document.getElementById("totalPage");
 const pageWordInput = document.getElementById("pageWord");
 
+// 【修复3：补充缺失stripMeta函数，剥离ZW_META注释】
+function stripMeta(txt){
+    return txt.replace(/<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->\n\n/g,"");
+}
+
 window.onload = ()=>{
-    // 加载全局默认配置
+    // 修复1：全部使用 globalSet，删除 global.xxx 错误写法
     fontSize = globalSet.defFont;
     lineH = globalSet.defLH;
     theme = globalSet.defTheme;
-    sortMode = global.defSort;
-    viewMode = global.defView;
-    pageWord = global.defWord;
+    sortMode = globalSet.defSort;
+    viewMode = globalSet.defView;
+    pageWord = globalSet.defWord;
     pageWordInput.value = pageWord;
     sortSel.value = sortMode;
-    // 赋值弹窗默认选项
-    document.getElementById("defFont").value = global.defFont;
-    document.getElementById("defLH").value = global.defLH;
-    document.getElementById("defTheme").value = global.defTheme;
-    document.getElementById("defSort").value = global.defSort;
-    document.getElementById("defView").value = global.defView;
-    document.getElementById("defWord").value = global.defWord;
+
+    document.getElementById("defFont").value = globalSet.defFont;
+    document.getElementById("defLH").value = globalSet.defLH;
+    document.getElementById("defTheme").value = globalSet.defTheme;
+    document.getElementById("defSort").value = globalSet.defSort;
+    document.getElementById("defView").value = globalSet.defView;
+    document.getElementById("defWord").value = globalSet.defWord;
 
     document.body.dataset.theme = theme;
     contentBox.style.fontSize = fontSize + "px";
@@ -285,12 +289,11 @@ function bindSearchEnter(){
     searchInput.addEventListener("keydown",e=>e.key==="Enter"&&doSearch())
 }
 function renderModeBtn(){
-    document.querySelectorAll(".mode-btn").forEach(b=>b.classList.toggle("active",b.onclick.includes(viewMode)));
+    document.querySelectorAll(".mode-btn").forEach(b=>b.classList.toggle("active",b.getAttribute("onclick").includes(`'${viewMode}'`)));
     document.querySelectorAll(".setting-btn[data-read]").forEach(b=>b.classList.toggle("active",b.dataset.read===readMode));
     document.querySelectorAll(".lh").forEach(b=>b.classList.toggle("active",+b.dataset.lh===lineH));
     document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.t===theme));
 }
-// 全局设置弹窗
 function openSetModal(){setModal.style.display="flex"}
 function closeSetModal(){setModal.style.display="none"}
 function saveGlobalSet(){
@@ -306,7 +309,6 @@ function saveGlobalSet(){
     alert("默认设置保存成功，刷新页面生效");
     closeSetModal();
 }
-// 切换阅读模式
 function switchReadMode(mode,btn){
     readMode = mode;
     renderModeBtn();
@@ -318,16 +320,15 @@ function switchReadMode(mode,btn){
         curPageIdx=0;
     }
 }
-// 文本分页切割
 function splitPage(rawText){
     const wordNum = +pageWordInput.value;
     pageList = [];
     let temp = "";
     let count = 0;
     for(let c of rawText){
-        temp += c;
         if(/\s/.test(c)) count++;
         else count++;
+        temp += c;
         if(count >= wordNum){
             pageList.push(temp);
             temp = "";count=0;
@@ -349,47 +350,47 @@ function prevPage(){
 function nextPage(){
     if(curPageIdx < pageList.length-1){curPageIdx++;renderPage()}
 }
-// 【核心修复】严格只允许md/txt，拦截所有二进制文件
-function isAllowFile(name){
-    const allow = [".md",".txt"];
-    return allow.some(s=>name.toLowerCase().endsWith(s));
+// 文件白名单过滤
+function isTextFile(name){
+    const lower = name.toLowerCase();
+    return lower.endsWith(".md") || lower.endsWith(".txt");
 }
-// 递归扫描，只保留md/txt，过滤sort.json、二进制、图片压缩包
-async function scanAll(path){
-    const res = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/${path}`);
-    if(!res.ok) return [];
-    const arr = await res.json();
-    let out = [];
-    for(let item of arr){
-        const p = decodeURIComponent(item.path);
-        const n = decodeURIComponent(item.name);
-        if(item.type === "dir"){
-            const sub = await scanAll(p);
-            out = out.concat(sub);
-        }else if(item.type === "file"){
-            if(n === "sort.json") continue;
-            if(!isAllowFile(n)) continue;
-            out.push({
-                path:p,
-                name:n,
-                download:item.download_url,
-                modified:item.modified || "1970-01-01T00:00:00Z"
-            });
+// 递归扫描目录
+async function scanFolder(path){
+    const list = [];
+    try{
+        const res = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/${path}`);
+        if(!res.ok) return [];
+        const arr = await res.json();
+        for(let item of arr){
+            const fileName = decodeURIComponent(item.name);
+            const fullPath = decodeURIComponent(item.path);
+            if(fileName === "sort.json" || fileName.startsWith(".")) continue;
+            if(item.type === "dir"){
+                const sub = await scanFolder(fullPath);
+                list.push(...sub);
+            }else if(item.type === "file" && isTextFile(fileName)){
+                list.push({
+                    path:fullPath,
+                    name:fileName,
+                    download:item.download_url,
+                    modified:item.modified || "1970-01-01T00:00:00Z"
+                });
+            }
         }
-    }
-    return out;
+    }catch(err){console.warn("目录读取失败",path)}
+    return list;
 }
-// 解析ZW_META
-function parseMeta(raw, filePath){
+// 解析元数据
+function parseMeta(raw,filePath){
     const reg = /<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->/;
     const m = raw.match(reg);
-    let meta = {title:"",author:"",book:""};
+    let meta = {title:"",author:"",book:"未分类"};
     if(m){
         try{meta = JSON.parse(m[1])}catch{}
     }
     const seg = filePath.replace("novel/","").split("/");
-    const pathBook = seg.length >=2 ? seg[0] : "未分类";
-    if(!meta.book) meta.book = pathBook;
+    if(seg.length >=2) meta.book = seg[0];
     return meta;
 }
 async function loadAllData(){
@@ -403,28 +404,26 @@ async function loadAllData(){
             let raw = decodeURIComponent(escape(atob(d.content)));
             sortOrder = JSON.parse(raw).order.map(x=>decodeURIComponent(x));
         }
-    }catch(err){
-        console.log("无sort.json",err);
-    }
-    status.textContent = "扫描所有小说文件";
-    const files = await scanAll("novel");
+    }catch(err){console.log("无自定义排序文件")}
+    status.textContent = "扫描所有小说";
+    const files = await scanFolder("novel");
     allNovel = [];
-    // 逐文件捕获读取异常，单个文件报错不中断整体加载
     for(let f of files){
         try{
             const txtRes = await fetch(f.download);
             if(!txtRes.ok) continue;
-            const txt = await txt.text();
-            const meta = parse(txt,f.path);
-            const pure = txt.replace(/<!-- ZW_META:[\s\S]*? -->\n\n/,"");
+            const rawTxt = await txt.text();
+            // 修复2：调用正确函数名 parseMeta，废弃parse()
+            const meta = parseMeta(rawTxt,f.path);
+            const cleanTxt = stripMeta(rawTxt);
             allNovel.push({
                 path:f.path,
                 name:f.name,
                 url:f.download,
-                title:meta.title || f.name.replace(/\.(md|txt)$/,""),
+                title:meta.title || f.name.replace(/\.(md|txt)$/i,""),
                 author:meta.author || "未知作者",
                 book:meta.book,
-                raw:pure,
+                raw:cleanTxt,
                 modified:new Date(f.modified).getTime()
             });
         }catch(e){
@@ -437,43 +436,35 @@ async function loadAllData(){
     status.style.display = "none";
     render();
 }
-// 切换视图
 function switchView(mode){
     viewMode = mode;
-    document.querySelectorAll(".mode-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("onclick").includes(`'${mode}'`)));
+    renderModeBtn();
     render();
 }
-// 搜索
 function doSearch(){
     const key = searchInput.value.trim().toLowerCase();
-    if(!key){
-        filterNovel = [...allNovel];
-        render();
-        return;
-    }
+    if(!key){filterNovel = [...allNovel];render();return}
     filterNovel = allNovel.filter(item=>{
-        const t = item.title.toLowerCase();
-        const a = item.author.toLowerCase();
-        const b = item.book.toLowerCase();
-        const c = item.raw.toLowerCase();
-        return t.includes(key) || a.includes(key) || b.includes(key) || c.includes(key);
+        return item.title.toLowerCase().includes(key)
+            || item.author.toLowerCase().includes(key)
+            || item.book.toLowerCase().includes(key)
+            || item.raw.toLowerCase().includes(key);
     });
+    render();
 }
 function resetSearch(){
     searchInput.value = "";
     filterNovel = [...allNovel];
     render();
 }
-// 渲染列表
 function render(){
     listEl.innerHTML = "";
     let data = [...filterNovel];
-    // 三种排序
     if(sortMode === "custom"){
         const ordered = [], rest = [];
         sortOrder.forEach(p=>{
-            const item = data.find(x=>x.path === p);
-            if(item) ordered.push(item);
+            const hit = data.find(x=>x.path === p);
+            if(hit) ordered.push(hit);
         });
         data.forEach(x=>{if(!ordered.find(i=>i.path===x.path)) rest.push(x)});
         data = [...ordered,...rest];
@@ -503,7 +494,6 @@ function render(){
         data.forEach(item=>createCard(item,false));
     }
 }
-// 创建卡片
 function createCard(item, hideBookTag){
     const div = document.createElement("div");
     div.className = "novel-card";
@@ -516,44 +506,41 @@ function createCard(item, hideBookTag){
     `;
     listEl.appendChild(div);
 }
-// 打开阅读页
 function openRead(item){
     listEl.style.display = "none";
     reader.style.display = "block";
     rTitle.textContent = item.title;
     rMeta.innerHTML = `书籍：${item.book} &nbsp;|&nbsp; 作者：${item.author}`;
-    if(/\.md$/i.test(item.name)){
+    if(item.name.toLowerCase().endsWith(".md")){
         contentBox.innerHTML = marked.parse(item.raw);
     }else{
-        contentBox.innerHTML = `<div style="white-space:pre-wrap">${item.raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>`;
+        contentBox.innerHTML = `<pre style="white-space:pre-wrap">${item.raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</pre>`;
     }
     curPageIdx = 0;
-    if(readMode==="page"){
+    if(readMode === "page"){
         splitPage(item.raw);
-        pageCtrl.style.display="flex";
-    }else pageCtrl.style.display="none";
+        pageCtrl.style.display = "flex";
+    }else{
+        pageCtrl.style.display = "none";
+    }
 }
 function backToList(){
     reader.style.display = "none";
     listEl.style.display = "grid";
 }
-// 字号行距主题
 function font(delta){
     fontSize = Math.max(12, Math.min(32, fontSize + delta));
     contentBox.style.fontSize = fontSize + "px";
-    localStorage.setItem("nw_font", fontSize);
 }
 function setLH(val, btn){
     lineH = val;
     contentBox.style.lineHeight = lineH;
-    localStorage.setItem("nw_lh", lineH);
-    document.querySelectorAll(".lh").forEach(b=>b.classList.toggle("active",+b.dataset.lh === val));
+    renderModeBtn();
 }
 function setT(t, btn){
     theme = t;
     document.body.dataset.theme = t;
-    localStorage.setItem("nw_theme", t);
-    document.querySelectorAll(".th").forEach(b=>b.classList.toggle("active",b.dataset.t === t));
+    renderModeBtn();
 }
 </script>
 </body>
