@@ -12,8 +12,8 @@
 <style>
 :root {
     --bg:#f4ecd8;--card:rgba(251,246,237,0.75);--text:#5b4636;--sub:#8b7355;
-    --accent:#5e72e4;--accent-light:rgba(94,114,0.12);--border:rgba(230,220,0.6);
-    --shadow:0 6px 22px rgba(0,0,0.06);--radius-lg:24px;--radius-md:16px;--radius-pill:9999px;--blur:14px;
+    --accent:#5e72e4;--accent-light:rgba(94,114,228,0.12);--border:rgba(230,220,200,0.6);
+    --shadow:0 6px 22px rgba(0,0,0,0.06);--radius-lg:24px;--radius-md:16px;--radius-pill:9999px;--blur:14px;
     --reader-bg:#fbf6ed;--reader-text:#5b4636;
 }
 [data-theme="light"]{--bg:#f4f6f9;--card:rgba(255,255,255,0.72);--text:#333;--sub:#666;--border:rgba(238,238,238,0.7);--reader-bg:#fff;--reader-text:#333;}
@@ -28,10 +28,9 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
 .nav-links a:hover{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 12px rgba(94,114,228,0.3)}
 .search-bar{width:100%;margin-bottom:16px;display:flex;gap:10px}
 #searchInput{flex:1;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--card);color:var(--text);font-size:0.95rem;outline:none}
-#searchBtn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);cursor-pointer}
+#searchBtn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);cursor:pointer}
 .mode-action-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:20px}
 .mode-switch{display:flex;gap:10px;align-items:center}
-/* 统一美化按钮圆角+hover */
 .mode-btn,.sort-select,.setting-btn,.theme-btn,.page-btn{
     padding:9px 18px;border:1px solid var(--border);border-radius:14px !important;
     background:transparent;color:var(--text);cursor:pointer;font-size:0.88rem;transition:0.2s
@@ -66,10 +65,8 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
 .settings-panel{display:flex;flex-wrap:wrap;gap:12px;padding:18px 22px;background:rgba(0,0,0,0.03);border-radius:var(--radius-md);margin-bottom:28px;border:1px solid var(--border)}
 .settings-panel span{color:var(--sub);font-size:0.94rem}
 #content-area{line-height:1.8;word-break:break-word;padding:8px 4px;min-height:400px}
-/* 分页控制栏 */
 .page-control{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
 .page-info{color:var(--sub)}
-/* 全局设置弹窗 */
 .set-modal{
     position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:999;display:none;align-items:center;justify-content:center;
 }
@@ -99,13 +96,13 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
     <nav class="top-nav">
         <div class="nav-brand"><h1><i class="fa-solid fa-book-open"></i>中梧小说</h1></div>
         <div class="nav-links">
-            <a href="https://youreln.github.io/Cloudpad/" target="_blank"><i class="fa-solid fa-pen"></i>云笺编辑器</a>
+            <a href="editor.html" target="_blank"><i class="fa-solid fa-pen"></i>云笺编辑器</a>
         </div>
-    </div>
+    </nav>
 
     <div class="search-bar">
         <input id="searchInput" placeholder="搜索标题/作者/书籍/正文">
-        <button id="searchBtn">搜索</button>
+        <button id="searchBtn" onclick="doSearch()">搜索</button>
         <button class="mode-btn" onclick="resetSearch()">重置</button>
     </div>
 
@@ -120,7 +117,7 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
             </select>
         </div>
         <div class="action-bar">
-            <a href="https://youreln.github.io/Cloudpad/" target="_blank" class="btn-write"><i class="fa-solid fa-pen-to-square"></i>写小说</a>
+            <a href="editor.html" target="_blank" class="btn-write"><i class="fa-solid fa-pen-to-square"></i>写小说</a>
             <button class="btn-setting" onclick="openSetModal()"><i class="fa-solid fa-cog"></i>全局设置</button>
         </div>
     </div>
@@ -133,7 +130,6 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
         <button class="back-btn" onclick="backToList()">← 返回书架</button>
         <h2 class="reader-title" id="r-title"></h2>
         <div class="reader-m" id="r-meta"></div>
-        <!-- 阅读模式切换 -->
         <div class="settings-panel">
             <span>阅读模式：</span>
             <button class="setting-btn active" data-read="scroll" onclick="switchReadMode('scroll',this)">完整滚动</button>
@@ -142,7 +138,7 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
             <input type="number" id="pageWord" value="1200" min="400" max="3000" style="width:90px">
             <span style="margin-left:10px">字号</span>
             <button class="setting-btn" onclick="font(-2)">A-</button>
-            <button class="setting-btn" onclick="font(2)">A+</span>
+            <button class="setting-btn" onclick="font(2)">A+</button>
             <span style="margin-left:10px">行距</span>
             <button class="setting-btn lh" data-lh="1.5" onclick="setLH(1.5,this)">紧凑</button>
             <button class="setting-btn lh active" data-lh="1.8" onclick="setLH(1.8,this)">适中</button>
@@ -153,7 +149,6 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
             <button class="theme-btn" data-t="dark" onclick="setT('dark',this)">🌙夜间</button>
         </div>
         <div id="content-area"></div>
-        <!-- 分页控制器 -->
         <div class="page-control" id="pageCtrl" style="display:none">
             <button class="page-btn" onclick="prevPage()">上一页</button>
             <span class="page-info">第 <span id="curPage">1</span> / <span id="totalPage">1</span> 页</span>
@@ -162,7 +157,6 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
     </div>
 </div>
 
-<!-- 全局设置弹窗 -->
 <div class="set-modal" id="setModal">
     <div class="set-box">
         <div class="set-header">
@@ -230,14 +224,13 @@ let sortMode = "custom";
 let fontSize = 18;
 let lineH = 1.8;
 let theme = "sepia";
-let readMode = "scroll"; // scroll完整 / page分页
+let readMode = "scroll";
 let pageWord = 1200;
 let pageList = [];
 let curPageIdx = 0;
 
-// 全局设置读取
 const globalSet = JSON.parse(localStorage.getItem("novelGlobalSet")) || {
-    defFont:18,defLH:1.8,defTheme:"sepia",defSort:"custom",defView:"book",defWord:120
+    defFont:18,defLH:1.8,defTheme:"sepia",defSort:"custom",defView:"book",defWord:1200
 };
 
 const listEl = document.getElementById("novel-list");
@@ -256,22 +249,21 @@ const totalPageDom = document.getElementById("totalPage");
 const pageWordInput = document.getElementById("pageWord");
 
 window.onload = ()=>{
-    // 加载全局默认配置
-    fontSize = global.defFont;
-    lineH = global.defLH;
-    theme = global.defTheme;
-    sortMode = global.defSort;
-    viewMode = global.defView;
-    pageWord = global.defWord;
+    fontSize = globalSet.defFont;
+    lineH = globalSet.defLH;
+    theme = globalSet.defTheme;
+    sortMode = globalSet.defSort;
+    viewMode = globalSet.defView;
+    pageWord = globalSet.defWord;
     pageWordInput.value = pageWord;
     sortSel.value = sortMode;
-    // 赋值弹窗默认选项
-    document.getElementById("defFont").value = global.defFont;
-    document.getElementById("defLH").value = global.defLH;
-    document.getElementById("defTheme").value = global.defTheme;
-    document.getElementById("defSort").value = global.defSort;
-    document.getElementById("defView").value = global.defView;
-    document.getElementById("defWord").value = global.defWord;
+
+    document.getElementById("defFont").value = globalSet.defFont;
+    document.getElementById("defLH").value = globalSet.defLH;
+    document.getElementById("defTheme").value = globalSet.defTheme;
+    document.getElementById("defSort").value = globalSet.defSort;
+    document.getElementById("defView").value = globalSet.defView;
+    document.getElementById("defWord").value = globalSet.defWord;
 
     document.body.dataset.theme = theme;
     contentBox.style.fontSize = fontSize + "px";
@@ -296,7 +288,6 @@ function renderModeBtn(){
     document.querySelectorAll(".lh").forEach(b=>b.classList.toggle("active",+b.dataset.lh===lineH));
     document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.t===theme));
 }
-// 全局设置弹窗
 function openSetModal(){setModal.style.display="flex"}
 function closeSetModal(){setModal.style.display="none"}
 function saveGlobalSet(){
@@ -305,14 +296,13 @@ function saveGlobalSet(){
         defLH:+document.getElementById("defLH").value,
         defTheme:document.getElementById("defTheme").value,
         defSort:document.getElementById("defSort").value,
-        defView:document.getElementById("defView"),
+        defView:document.getElementById("defView").value,
         defWord:+document.getElementById("defWord").value
     };
     localStorage.setItem("novelGlobalSet",JSON.stringify(s));
     alert("默认设置保存成功，刷新页面生效");
     closeSetModal();
 }
-// 切换阅读模式
 function switchReadMode(mode,btn){
     readMode = mode;
     renderModeBtn();
@@ -324,7 +314,6 @@ function switchReadMode(mode,btn){
         curPageIdx=0;
     }
 }
-// 文本分页切割
 function splitPage(rawText){
     const wordNum = +pageWordInput.value;
     pageWord = wordNum;
@@ -356,7 +345,6 @@ function prevPage(){
 function nextPage(){
     if(curPageIdx < pageList.length-1){curPageIdx++;renderPage()}
 }
-// 递归扫描文件
 async function scanAll(path){
     const res = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/${path}`);
     if(!res.ok) return [];
@@ -373,7 +361,7 @@ async function scanAll(path){
     return out;
 }
 function parseMeta(raw,filePath){
-    const reg = /<!-- ZW_META:\s*(\{[\s\S]*?\})/;
+    const reg = /<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->/;
     const m = raw.match(reg);
     let meta = {title:"",author:"",book:""};
     if(m) try{meta=JSON.parse(m[1])}catch{}
@@ -397,11 +385,11 @@ async function loadAllData(){
     const files = await scanAll("novel");
     allNovel = [];
     for(let f of files){
-        const txt = await (await fetch(f.download)).text();
-        const meta = parse(txt,f.path);
+        const txt = await (await fetch(f.download_url)).text();
+        const meta = parseMeta(txt,f.path);
         const pure = txt.replace(/<!-- ZW_META:[\s\S]*? -->\n\n/,"");
         allNovel.push({
-            path:f.path,name:f.name,url:f.download,title:meta.title||f.name.replace(/\.(md|txt)$/,""),
+            path:f.path,name:f.name,url:f.download_url,title:meta.title||f.name.replace(/\.(md|txt)$/,""),
             author:meta.author||"未知作者",book:meta.book,raw:pure,modified:new Date(f.modified).getTime()
         })
     }
@@ -456,7 +444,7 @@ function createCard(item,hideBook){
     div.className="novel-card";
     div.onclick = ()=>openRead(item);
     div.innerHTML = `
-        ${hide?"":`<div class="card-book-tag">书籍：${item.book}</div>`}
+        ${hideBook ? "" : `<div class="card-book-tag">书籍：${item.book}</div>`}
         <div class="novel-title">${item.title}</div>
         <div class="novel-author">作者：${item.author}</div>
         <div class="novel-meta">${item.name}</div>
@@ -471,9 +459,9 @@ function openRead(item){
     const text = /\.md$/i.test(item.name) ? marked.parse(item.raw) : `<pre style="white-space:pre-wrap">${item.raw.replace(/&/g,"&amp;")}</pre>`;
     contentBox.innerHTML = text;
     curPageIdx=0;
-    if(readMode==="page"){split(item.raw);pageCtrl.style.display="flex"}else pageCtrl.style.display="none";
+    if(readMode==="page"){splitPage(item.raw);pageCtrl.style.display="flex"}else pageCtrl.style.display="none";
 }
-function backToList(){reader.style.display="none";listEl.style.grid}
+function backToList(){reader.style.display="none";listEl.style.display="grid"}
 function font(delta){
     fontSize = Math.max(12,Math.min(32,fontSize+delta));
     contentBox.style.fontSize = fontSize+"px";
