@@ -77,9 +77,11 @@ body{font-family:system-ui;min-height:100vh;background:var(--bg);color:var(--tex
         <div class="mode-switch">
             <button class="mode-btn active" onclick="switchView('book')">📚 书籍模式</button>
             <button class="mode-btn" onclick="switchView('chapter')">📑 所有篇章</button>
+            <!-- 默认选中自定义排序sort.json -->
             <select class="sort-select" id="sortType">
-                <option value="custom">自定义排序</option>
-                <option value="name">标题升序</option>
+                <option value="custom">自定义排序（sort.json 默认）</option>
+                <option value="name">文件名升序</option>
+                <option value="time">修改时间倒序</option>
             </select>
         </div>
         <div class="action-bar">
@@ -119,6 +121,7 @@ const GH_API = "https://api.github.com/repos";
 let allNovel = [];
 let sortOrder = [];
 let viewMode = "book";
+// 默认：custom 读取sort.json排序
 let sortMode = "custom";
 let fontSize = +localStorage.getItem("nw_font") || 18;
 let lineH = +localStorage.getItem("nw_lh") || 1.8;
@@ -146,7 +149,7 @@ function bindSortChange(){
         render();
     }
 }
-// 递归获取全部小说文件（支持子书籍文件夹）
+// 递归扫描所有小说文件并获取修改时间
 async function scanAll(path){
     const res = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/${path}`);
     if(!res.ok) return [];
@@ -159,12 +162,17 @@ async function scanAll(path){
             const sub = await scanAll(p);
             out = out.concat(sub);
         }else if(item.type === "file" && n !== "sort.json" && /\.(md|txt)$/i.test(n)){
-            out.push({path:p,name:n,download:item.download_url});
+            out.push({
+                path:p,
+                name:n,
+                download:item.download_url,
+                modified:item.modified || "1970-01-01T00:00:00Z"
+            });
         }
     }
     return out;
 }
-// 解析ZW_META，同时从路径提取书籍
+// 解析ZW_META，自动提取所属书籍
 function parseMeta(raw, filePath){
     const reg = /<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->/;
     const m = raw.match(reg);
@@ -172,7 +180,6 @@ function parseMeta(raw, filePath){
     if(m){
         try{meta = JSON.parse(m[1])}catch{}
     }
-    // 路径提取书籍
     const seg = filePath.replace("novel/","").split("/");
     const pathBook = seg.length >=2 ? seg[0] : "未分类";
     if(!meta.book) meta.book = pathBook;
@@ -180,8 +187,8 @@ function parseMeta(raw, filePath){
 }
 async function loadAllData(){
     loader.style.display = "block";
-    status.textContent = "读取sort.json排序配置";
-    // 读取排序
+    status.textContent = "读取sort.json自定义排序配置";
+    // 读取sort.json
     try{
         const sRes = await fetch(`${GH_API}/${GH_USER}/${GH_REPO}/contents/novel/sort.json`);
         if(sRes.ok){
@@ -190,7 +197,7 @@ async function loadAllData(){
             sortOrder = JSON.parse(raw).order.map(x=>decodeURIComponent(x));
         }
     }catch{sortOrder = []}
-    status.textContent = "扫描所有书籍文件夹与小说";
+    status.textContent = "扫描所有书籍文件夹与小说文件";
     const files = await scanAll("novel");
     allNovel = [];
     for(let f of files){
@@ -204,25 +211,26 @@ async function loadAllData(){
             title:meta.title || f.name.replace(/\.(md|txt)$/,""),
             author:meta.author || "未知作者",
             book:meta.book,
-            raw:pure
+            raw:pure,
+            modified:new Date(f.modified).getTime()
         });
     }
     loader.style.display = "none";
     status.style.display = "none";
     render();
 }
-// 切换视图：书籍/篇章
+// 切换书籍/篇章视图
 function switchView(mode){
     viewMode = mode;
     document.querySelectorAll(".mode-btn").forEach(b=>b.classList.toggle("active",b.onclick.includes(mode)));
     render();
 }
-// 渲染列表
+// 渲染列表，三种排序逻辑
 function render(){
     listEl.innerHTML = "";
     let data = [...allNovel];
-    // 排序处理
     if(sortMode === "custom"){
+        // 默认：sort.json自定义顺序
         const ordered = [], rest = [];
         sortOrder.forEach(p=>{
             const item = data.find(x=>x.path === p);
@@ -230,15 +238,18 @@ function render(){
         });
         data.forEach(x=>{if(!ordered.find(i=>i.path===x.path)) rest.push(x)});
         data = [...ordered,...rest];
-    }else{
-        data.sort((a,b)=>a.title.localeCompare(b.title));
+    }else if(sortMode === "name"){
+        // 文件名字母升序
+        data.sort((a,b)=>a.name.localeCompare(b.name));
+    }else if(sortMode === "time"){
+        // 修改时间倒序（最新在前）
+        data.sort((a,b)=>b.modified - a.modified);
     }
     if(data.length === 0){
         listEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--sub)">暂无小说，前往编辑器创建</div>`;
         return;
     }
     if(viewMode === "book"){
-        // 按书籍分组
         const map = {};
         data.forEach(item=>{
             if(!map[item.book]) map[item.book] = [];
@@ -252,11 +263,10 @@ function render(){
             map[bk].forEach(item=>createCard(item,true));
         })
     }else{
-        // 所有篇章，显示所属书籍标签
         data.forEach(item=>createCard(item,false));
     }
 }
-// 创建卡片
+// 生成小说卡片
 function createCard(item, hideBookTag){
     const div = document.createElement("div");
     div.className = "novel-card";
@@ -269,7 +279,7 @@ function createCard(item, hideBookTag){
     `;
     listEl.appendChild(div);
 }
-// 打开阅读页
+// 打开阅读页面
 function openRead(item){
     listEl.style.display = "none";
     reader.style.display = "block";
@@ -281,22 +291,25 @@ function openRead(item){
         contentBox.innerHTML = `<div style="white-space:pre-wrap">${item.raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>`;
     }
 }
+// 返回书架列表
 function backToList(){
     reader.style.display = "none";
     listEl.style.display = "grid";
 }
-// 阅读设置
+// 阅读字号调节
 function font(delta){
     fontSize = Math.max(12, Math.min(32, fontSize + delta));
     contentBox.style.fontSize = fontSize + "px";
     localStorage.setItem("nw_font", fontSize);
 }
+// 行距设置
 function setLH(val, btn){
     lineH = val;
     contentBox.style.lineHeight = lineH;
     localStorage.setItem("nw_lh", lineH);
     document.querySelectorAll(".lh").forEach(b=>b.classList.toggle("active",+b.dataset.lh === val));
 }
+// 主题切换
 function setT(t, btn){
     theme = t;
     document.body.dataset.theme = t;
