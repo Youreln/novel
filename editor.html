@@ -1,79 +1,1903 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中梧小说 - 编辑器</title>
-    <style>
-        :root { --bg-color: #121212; --text-color: #fff; --glass-bg: rgba(255,255,255,0.08); --glass-border: rgba(255,255,255,0.1); }
-        [data-theme="light"] { --bg-color: #f5f5dc; --text-color: #000; --glass-bg: rgba(255,255,255,0.6); --glass-border: rgba(255,255,255,0.8); }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: system-ui; background: var(--bg-color); color: var(--text-color); min-height: 100vh; padding: 30px; }
-        .editor-container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
-        input, textarea {
-            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);
-            background: var(--glass-bg); color: var(--text-color); font-size: 16px; outline: none;
-        }
-        textarea { height: 60vh; resize: vertical; font-family: inherit; line-height: 1.6; }
-        .actions { display: flex; gap: 10px; justify-content: flex-end; }
-        button {
-            padding: 10px 20px; border-radius: 8px; border: 1px solid var(--glass-border);
-            background: var(--glass-bg); color: var(--text-color); cursor: pointer; font-size: 14px;
-        }
-        button:hover { filter: brightness(1.2); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>云笺 · 小说编辑器 | 晚风寄星河</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* ===================== 主题变量 ===================== */
+:root {
+    --bg:#f4ecd8;--card:#fbf6ed;--text:#5b4636;--sub:#8b7355;
+    --accent:#6366f1;--accent2:#ec4899;--accent-light:rgba(99,102,241,0.12);
+    --border:#e6dcc8;
+    --shadow:0 6px 22px rgba(0,0,0,0.06);--shadow-hover:0 12px 32px rgba(0,0,0,0.1);
+    --radius-lg:24px;--radius-md:16px;--radius-sm:10px;
+    --transition:0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce:0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --gradient-main:linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#ec4899 100%);
+    --gradient-soft:linear-gradient(135deg,rgba(99,102,241,0.08) 0%,rgba(236,72,153,0.08) 100%);
+}
+[data-theme="light"]{
+    --bg:#f0f2f5;--card:#ffffff;--text:#1f2937;--sub:#6b7280;--border:#e5e7eb;
+    --accent-light:rgba(99,102,241,0.1);
+}
+[data-theme="dark"]{
+    --bg:#0f0f1a;--card:#1a1a2e;--text:#e0e0e0;--sub:#9ca3af;--border:#2d2d44;
+    --accent-light:rgba(99,102,241,0.2);
+    --shadow:0 6px 22px rgba(0,0,0,0.3);--shadow-hover:0 12px 32px rgba(0,0,0,0.5);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{
+    font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif;
+    min-height:100vh;background:var(--bg);color:var(--text);padding:16px;
+    transition:var(--transition);position:relative;overflow-x:hidden;
+}
+/* 背景装饰 */
+body::before{
+    content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+    background:var(--gradient-soft);pointer-events:none;z-index:0;opacity:0.6;
+}
+[data-theme="dark"] body::before{opacity:0.3;}
+
+.container{max-width:1440px;margin:0 auto;animation:fadeInUp 0.6s ease both;position:relative;z-index:1;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 5px var(--accent)}50%{box-shadow:0 0 20px var(--accent),0 0 30px var(--accent-light)}}
+
+/* ===================== 顶部进度条 ===================== */
+.progress-bar{
+    position:fixed;top:0;left:0;width:100%;height:3px;
+    background:transparent;z-index:10000;overflow:hidden;
+    opacity:0;transition:opacity 0.3s ease;
+}
+.progress-bar.show{opacity:1}
+.progress-fill{
+    height:100%;width:35%;background:var(--gradient-main);
+    position:relative;border-radius:0 3px 3px 0;
+    box-shadow:0 0 8px var(--accent);
+    animation:progressSlide 1.4s infinite cubic-bezier(0.65, 0, 0.35, 1);
+}
+@keyframes progressSlide{0%{left:-35%}100%{left:100%}}
+
+/* ===================== 顶部导航 ===================== */
+.top-nav{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;
+    padding:20px 28px;margin-bottom:20px;
+    background:var(--card);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);border:1px solid var(--border);
+    transition:var(--transition);position:relative;overflow:hidden;
+}
+.top-nav::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--gradient-main);
+}
+.top-nav:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px);}
+
+.nav-brand h1{
+    display:flex;align-items:center;gap:10px;font-size:1.7rem;font-weight:800;
+    background:var(--gradient-main);-webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;background-clip:text;
+    transition:var(--transition);letter-spacing:1px;
+}
+.nav-brand h1 i{
+    -webkit-text-fill-color:var(--accent);font-size:1.5rem;
+    animation:float 3s ease-in-out infinite;
+}
+.nav-brand h1:hover{transform:scale(1.03);}
+
+.nav-links{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.nav-links a{
+    text-decoration:none;color:var(--sub);font-size:0.88rem;font-weight:500;
+    padding:10px 20px;border:1px solid var(--border);border-radius:999px;
+    display:flex;gap:7px;align-items:center;transition:var(--transition);
+    background:transparent;position:relative;overflow:hidden;
+}
+.nav-links a::before{
+    content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+    background:var(--gradient-main);transition:var(--transition);z-index:-1;opacity:0;
+}
+.nav-links a:hover{
+    color:#fff;border-color:transparent;transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(99,102,241,0.35);
+}
+.nav-links a:hover::before{left:0;opacity:1;}
+.nav-links a:hover i{color:#fff;}
+
+.theme-bar{display:flex;gap:6px;padding:4px;background:var(--bg);border-radius:999px;}
+.theme-btn{
+    padding:8px 16px;border:none;border-radius:999px;background:transparent;
+    color:var(--text);cursor:pointer;transition:var(--transition);font-size:0.85rem;
+    font-weight:500;display:flex;align-items:center;gap:5px;
+}
+.theme-btn.active{
+    background:var(--gradient-main);color:#fff;
+    box-shadow:0 4px 12px rgba(99,102,241,0.4);transform:scale(1.05);
+}
+.theme-btn:hover:not(.active){background:var(--accent-light);transform:scale(1.03);}
+.theme-btn:active{transform:scale(0.95);}
+
+/* ===================== 主角展示卡 ===================== */
+.hero-banner{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:24px 28px;margin-bottom:20px;box-shadow:var(--shadow);
+    transition:var(--transition);position:relative;overflow:hidden;
+}
+.hero-banner::after{
+    content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;
+    background:var(--gradient-soft);border-radius:50%;filter:blur(40px);
+}
+.hero-banner:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px);}
+.hero-title{
+    font-size:1.3rem;font-weight:700;margin-bottom:14px;
+    background:var(--gradient-main);-webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;background-clip:text;
+    display:flex;align-items:center;gap:8px;
+}
+.hero-chars{display:flex;gap:20px;flex-wrap:wrap;position:relative;z-index:1;}
+.char-card{
+    flex:1;min-width:200px;padding:16px 20px;border-radius:var(--radius-md);
+    background:var(--gradient-soft);border:1px solid var(--border);
+    transition:var(--transition);position:relative;overflow:hidden;
+}
+.char-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(99,102,241,0.15);}
+.char-card::before{
+    content:'';position:absolute;top:0;left:0;width:4px;height:100%;
+    background:var(--gradient-main);
+}
+.char-name{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.char-name i{color:var(--accent);font-size:0.9rem;}
+.char-role{font-size:0.82rem;color:var(--sub);margin-bottom:6px;}
+.char-desc{font-size:0.85rem;color:var(--text);line-height:1.6;opacity:0.85;}
+.char-tag{
+    display:inline-block;padding:2px 10px;border-radius:999px;font-size:0.72rem;
+    background:var(--accent-light);color:var(--accent);margin-top:6px;font-weight:500;
+}
+
+/* ===================== 主布局 ===================== */
+.main-wrap{display:grid;grid-template-columns:300px 1fr;gap:20px;margin-bottom:20px;}
+
+/* ===================== 侧边栏 ===================== */
+.sidebar{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:18px;max-height:calc(100vh - 280px);overflow-y:auto;transition:var(--transition);
+    position:relative;
+}
+.sidebar:hover{box-shadow:var(--shadow-hover);}
+.sidebar-title{
+    font-size:1.1rem;font-weight:700;margin-bottom:14px;color:var(--accent);
+    display:flex;justify-content:space-between;align-items:center;
+}
+.sidebar-title span{display:flex;align-items:center;gap:6px;}
+.sidebar-actions{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.mini-btn{
+    flex:1;padding:8px 10px;font-size:0.82rem;border:1px solid var(--border);
+    border-radius:10px;background:transparent;color:var(--text);cursor:pointer;
+    transition:var(--transition);font-weight:500;
+}
+.mini-btn:hover{background:var(--accent-light);transform:translateY(-1px);border-color:var(--accent);}
+.mini-btn:active{transform:scale(0.96);}
+.mini-btn.primary{
+    background:var(--gradient-main);color:#fff;border-color:transparent;
+    box-shadow:0 4px 12px rgba(99,102,241,0.3);
+}
+.mini-btn.primary:hover{box-shadow:0 6px 18px rgba(99,102,241,0.45);}
+
+.book-dir{margin:10px 0;}
+.book-title{
+    font-weight:600;padding:8px 10px;cursor:pointer;display:flex;align-items:center;
+    gap:8px;border-radius:10px;transition:var(--transition);font-size:0.92rem;
+}
+.book-title:hover{background:var(--accent-light);}
+.book-title i{transition:transform 0.3s ease;color:var(--accent);}
+.book-dir.open .book-title i{transform:rotate(90deg);}
+.book-title .book-icon{font-size:1rem;}
+.chapter-list{
+    max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-left:24px;
+}
+.book-dir.open .chapter-list{max-height:2000px;}
+.chapter-file{
+    padding:6px 12px;margin:4px 0;cursor:pointer;border-radius:8px;font-size:0.88rem;
+    transition:var(--transition);position:relative;left:0;border-left:2px solid transparent;
+}
+.chapter-file:hover{background:var(--accent-light);left:4px;border-left-color:var(--accent);}
+.chapter-file.active{
+    background:var(--gradient-main);color:#fff;transform:scale(1.02);
+    box-shadow:0 4px 12px rgba(99,102,241,0.3);border-left-color:transparent;
+}
+
+/* ===================== 编辑区 ===================== */
+.edit-wrap{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:22px;display:flex;flex-direction:column;max-height:calc(100vh - 280px);
+    transition:var(--transition);
+}
+.edit-wrap:hover{box-shadow:var(--shadow-hover);}
+.edit-header{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+    gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);
+}
+.file-path{
+    color:var(--accent);font-weight:600;transition:var(--transition);
+    font-size:0.95rem;display:flex;align-items:center;gap:6px;
+}
+.file-path i{font-size:0.85rem;}
+.edit-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{
+    padding:9px 18px;border-radius:var(--radius-sm);cursor:pointer;font-size:0.88rem;
+    transition:var(--transition);border:1px solid var(--border);background:transparent;
+    color:var(--text);font-weight:500;display:flex;align-items:center;gap:6px;
+}
+.btn:hover{background:var(--accent-light);transform:translateY(-1px);border-color:var(--accent);}
+.btn:active{transform:scale(0.96);}
+.btn.primary{
+    background:var(--gradient-main);color:#fff;border-color:transparent;
+    box-shadow:0 4px 12px rgba(99,102,241,0.3);
+}
+.btn.primary:hover{box-shadow:0 6px 18px rgba(99,102,241,0.45);transform:translateY(-2px);}
+.btn.danger{
+    background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border-color:transparent;
+    box-shadow:0 4px 12px rgba(239,68,68,0.3);
+}
+.btn.danger:hover{box-shadow:0 6px 18px rgba(239,68,68,0.45);}
+.btn.warn{
+    background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-color:transparent;
+    box-shadow:0 4px 12px rgba(245,158,11,0.3);
+}
+
+/* ===================== 工具栏 ===================== */
+.toolbar{
+    display:flex;flex-wrap:wrap;gap:6px;padding:14px;border:1px solid var(--border);
+    border-radius:var(--radius-sm);margin-bottom:14px;background:var(--bg);
+}
+.toolbar button{
+    padding:7px 12px;font-size:0.85rem;border:1px solid var(--border);border-radius:8px;
+    background:var(--card);color:var(--text);cursor:pointer;transition:var(--transition);
+    font-weight:500;min-width:36px;
+}
+.toolbar button:hover{
+    background:var(--gradient-main);color:#fff;border-color:transparent;
+    transform:translateY(-2px);box-shadow:0 4px 10px rgba(99,102,241,0.3);
+}
+.toolbar button:active{transform:scale(0.92);}
+
+/* ===================== 编辑分栏 ===================== */
+.edit-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:400px;}
+#mdInput,#mdPreview{
+    width:100%;height:100%;padding:16px;border:1px solid var(--border);
+    border-radius:var(--radius-sm);background:var(--bg);color:var(--text);
+    resize:none;outline:none;line-height:1.9;overflow-y:auto;transition:var(--transition);
+    font-size:0.95rem;
+}
+#mdInput:focus,#mdPreview:focus{
+    border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);
+    background:var(--card);
+}
+#mdPreview h1,#mdPreview h2,#mdPreview h3{
+    color:var(--accent);margin:14px 0 8px;font-weight:700;transition:var(--transition);
+}
+#mdPreview h1{font-size:1.5rem;border-bottom:2px solid var(--accent-light);padding-bottom:8px;}
+#mdPreview h2{font-size:1.25rem;}
+#mdPreview h3{font-size:1.1rem;}
+#mdPreview p{margin-bottom:12px;}
+#mdPreview pre{
+    background:rgba(99,102,241,0.08);padding:14px;border-radius:10px;overflow-x:auto;
+    border:1px solid var(--border);
+}
+#mdPreview code{
+    background:rgba(99,102,241,0.1);padding:2px 8px;border-radius:6px;font-size:0.88em;
+    color:var(--accent);
+}
+#mdPreview blockquote{
+    border-left:4px solid var(--accent);padding:8px 16px;margin:12px 0;
+    background:var(--accent-light);border-radius:0 8px 8px 0;color:var(--sub);
+}
+
+/* ===================== 元信息面板 ===================== */
+.meta-panel{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:22px;margin-bottom:20px;transition:var(--transition);position:relative;overflow:hidden;
+}
+.meta-panel::before{
+    content:'';position:absolute;top:0;left:0;width:100%;height:3px;
+    background:var(--gradient-main);
+}
+.meta-panel:hover{box-shadow:var(--shadow-hover);}
+.meta-panel h3{
+    margin-bottom:16px;color:var(--accent);font-size:1.15rem;font-weight:700;
+    display:flex;align-items:center;gap:8px;
+}
+.meta-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px;}
+.meta-item label{
+    display:block;margin-bottom:7px;color:var(--sub);font-size:0.88rem;font-weight:500;
+}
+.meta-item input,.meta-item select{
+    width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);
+    background:var(--bg);color:var(--text);outline:none;transition:var(--transition);
+    font-size:0.9rem;
+}
+.meta-item input:focus,.meta-item select:focus{
+    border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);background:var(--card);
+}
+
+/* ===================== 弹窗 ===================== */
+.modal{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);z-index:9999;display:none;
+    align-items:center;justify-content:center;
+    backdrop-filter:blur(6px);animation:fadeBg 0.3s ease both;
+}
+@keyframes fadeBg{from{background:rgba(0,0,0,0)}to{background:rgba(0,0,0,0.5)}}
+.modal-box{
+    width:90%;background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius-md);padding:28px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    animation:modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;position:relative;
+    max-height:85vh;overflow-y:auto;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-box h3{
+    margin-bottom:18px;color:var(--accent);font-size:1.2rem;font-weight:700;
+    display:flex;align-items:center;gap:8px;
+}
+.modal-box select,.modal-box input,.modal-box textarea{
+    width:100%;padding:11px 14px;margin:8px 0;border:1px solid var(--border);
+    border-radius:10px;background:var(--bg);color:var(--text);outline:none;
+    transition:var(--transition);font-size:0.9rem;
+}
+.modal-box input:focus,.modal-box select:focus,.modal-box textarea:focus{
+    border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);
+}
+.modal-box textarea{min-height:120px;resize:vertical;}
+.modal-tip{margin:10px 0;font-size:0.85rem;}
+.modal-tip.success{color:#10b981;}
+.modal-tip.error{color:#ef4444;}
+.modal-close{
+    position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.4rem;
+    cursor:pointer;color:var(--sub);width:38px;height:38px;display:flex;
+    align-items:center;justify-content:center;border-radius:50%;transition:var(--transition);
+}
+.modal-close:hover{background:var(--accent-light);color:var(--accent);transform:rotate(90deg);}
+
+/* ===================== 标签页 ===================== */
+.sort-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;}
+.sort-tab{
+    padding:10px 20px;border:1px solid var(--border);border-bottom:none;
+    border-radius:10px 10px 0 0;background:transparent;color:var(--text);
+    cursor:pointer;font-size:0.95rem;transition:var(--transition);font-weight:500;
+}
+.sort-tab.active{
+    background:var(--gradient-main);color:#fff;border-color:transparent;
+    transform:translateY(-1px);box-shadow:0 -4px 12px rgba(99,102,241,0.2);
+}
+.sort-tab:hover:not(.active){background:var(--accent-light);}
+.sort-content{display:none;animation:fadeIn 0.3s ease both;}
+.sort-content.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===================== 列表项 ===================== */
+.sort-book-item,.sort-chapter-item{
+    display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+    border:1px solid var(--border);border-radius:10px;margin-bottom:10px;
+    transition:var(--transition);position:relative;left:0;background:var(--bg);
+}
+.sort-book-item:hover,.sort-chapter-item:hover{
+    background:var(--accent-light);left:4px;border-color:var(--accent);
+    box-shadow:0 4px 12px rgba(99,102,241,0.1);
+}
+.sort-item-name{flex:1;font-weight:600;font-size:0.92rem;}
+.sort-item-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.sort-item-actions button{
+    padding:5px 12px;font-size:0.8rem;border:1px solid var(--border);border-radius:7px;
+    background:var(--card);color:var(--text);cursor:pointer;transition:var(--transition);
+    font-weight:500;
+}
+.sort-item-actions button:hover{
+    background:var(--gradient-main);color:#fff;transform:scale(1.05);border-color:transparent;
+}
+.sort-item-actions button:active{transform:scale(0.95);}
+.sort-item-actions .btn-del{color:#ef4444;border-color:#ef4444;}
+.sort-item-actions .btn-del:hover{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+
+.chapter-sort-tip{color:var(--sub);font-size:0.9rem;margin-bottom:12px;}
+
+/* ===================== Toast ===================== */
+.toast{
+    position:fixed;bottom:30px;right:30px;padding:14px 26px;border-radius:12px;z-index:9999;
+    opacity:0;transform:translateY(20px);
+    transition:all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow:0 8px 28px rgba(0,0,0,0.2);font-weight:500;font-size:0.9rem;
+    display:flex;align-items:center;gap:8px;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;}
+.toast.error{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;}
+
+/* ===================== 页脚 ===================== */
+.footer{
+    text-align:center;padding:24px;color:var(--sub);font-size:0.88rem;
+    background:var(--card);border-radius:var(--radius-lg);border:1px solid var(--border);
+    box-shadow:var(--shadow);margin-bottom:10px;
+}
+.footer a{
+    color:var(--accent);text-decoration:none;font-weight:500;transition:var(--transition);
+}
+.footer a:hover{text-decoration:underline;opacity:0.8;}
+.footer .novel-info{
+    margin-top:8px;font-size:0.82rem;opacity:0.8;
+    background:var(--gradient-main);-webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;background-clip:text;font-weight:600;
+}
+
+/* ===================== 滚动条 ===================== */
+::-webkit-scrollbar{width:7px;height:7px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{
+    background:linear-gradient(180deg,var(--accent),var(--accent2));
+    border-radius:4px;transition:var(--transition);
+}
+::-webkit-scrollbar-thumb:hover{opacity:0.8;}
+
+/* ===================== 响应式 ===================== */
+@media(max-width:900px){
+    .main-wrap{grid-template-columns:1fr;}
+    .edit-split{grid-template-columns:1fr;grid-template-rows:300px 300px;}
+    .meta-row{grid-template-columns:1fr;}
+    .hero-chars{flex-direction:column;}
+}
+</style>
 </head>
-<body>
-    <div class="editor-container">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>写小说</h1>
-            <a href="index.html" style="color:var(--text-color); text-decoration:none;">返回首页</a>
+<body data-theme="sepia">
+
+<!-- 顶部进度条 -->
+<div id="progressBar" class="progress-bar"><div class="progress-fill"></div></div>
+
+<div class="container">
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="nav-brand"><h1><i class="fa-solid fa-feather-pointed"></i>云笺小说编辑器</h1></div>
+        <div class="nav-links">
+            <a href="https://youreln.github.io/novel/"><i class="fa-solid fa-house"></i>返回书架</a>
+            <a href="https://youreln.github.io/Cloudpad/" target="_blank"><i class="fa-solid fa-pen-nib"></i>云笺编辑器</a>
+            <a href="javascript:void(0)" onclick="openTokenModal()" style="cursor:pointer"><i class="fa-solid fa-key"></i>令牌设置</a>
+            <div class="theme-bar">
+                <button class="theme-btn" data-theme="light" onclick="setTheme('light',this)"><i class="fa-solid fa-sun"></i> 日间</button>
+                <button class="theme-btn active" data-theme="sepia" onclick="setTheme('sepia',this)"><i class="fa-solid fa-book-open"></i> 护眼</button>
+                <button class="theme-btn" data-theme="dark" onclick="setTheme('dark',this)"><i class="fa-solid fa-moon"></i> 夜间</button>
+            </div>
         </div>
-        <input type="text" id="novel-title" placeholder="小说名称">
-        <input type="text" id="novel-author" placeholder="作者名称">
-        <textarea id="novel-content" placeholder="在此开始你的创作..."></textarea>
-        <div class="actions">
-            <button onclick="exportNovel('txt')">导出 TXT</button>
-            <button onclick="exportNovel('md')">导出 MD</button>
-            <button onclick="exportNovel('html')">导出 HTML</button>
+    </nav>
+
+    <!-- 主角展示横幅 -->
+    <div class="hero-banner">
+        <div class="hero-title"><i class="fa-solid fa-star"></i> 中梧宇宙 · 主角档案</div>
+        <div class="hero-chars">
+            <div class="char-card">
+                <div class="char-name"><i class="fa-solid fa-user-astronaut"></i> 林中梧</div>
+                <div class="char-role">男主角 · 外号"老总"</div>
+                <div class="char-desc">生于2009年12月22日，性格沉稳内敛，心怀星河，是晚风故事的核心人物。</div>
+                <span class="char-tag"><i class="fa-solid fa-mars"></i> 男主</span>
+            </div>
+            <div class="char-card">
+                <div class="char-name"><i class="fa-solid fa-user-astronaut"></i> 翁婧</div>
+                <div class="char-role">女主角 · 星河赴约人</div>
+                <div class="char-desc">温柔而坚定，与林中梧在晚风中相遇，共同奔赴山海之约。</div>
+                <span class="char-tag"><i class="fa-solid fa-venus"></i> 女主</span>
+            </div>
+            <div class="char-card">
+                <div class="char-name"><i class="fa-solid fa-book"></i> 作品系列</div>
+                <div class="char-role">正传 + 外传</div>
+                <div class="char-desc">《晚风寄星河，梧萌赴山海》正传 · 《梧婧外传·星河双影》番外篇</div>
+                <span class="char-tag"><i class="fa-solid fa-infinity"></i> 中梧宇宙</span>
+            </div>
         </div>
     </div>
 
-    <script>
-        function getPrefs() {
-            return JSON.parse(localStorage.getItem('zw_prefs') || JSON.stringify({
-                fontSize: 18, lineHeight: 1.8, bgColor: '#121212'
-            }));
+    <div class="main-wrap">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-title">
+                <span><i class="fa-solid fa-folder-tree"></i> 书籍章节</span>
+                <button class="mini-btn" onclick="refreshFileTree()"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+            <div class="sidebar-actions">
+                <button class="mini-btn primary" onclick="createNewNovel()"><i class="fa-solid fa-plus"></i> 新建章节</button>
+                <button class="mini-btn" onclick="openBookManager()"><i class="fa-solid fa-gears"></i> 书籍管理</button>
+            </div>
+            <div id="fileTree"></div>
+        </div>
+
+        <!-- 编辑区 -->
+        <div class="edit-wrap">
+            <div class="edit-header">
+                <span class="file-path" id="currentFilePath"><i class="fa-solid fa-file-lines"></i> 未选择文件</span>
+                <div class="edit-actions">
+                    <button class="btn primary" onclick="saveNovel()"><i class="fa-solid fa-floppy-disk"></i> 保存到仓库</button>
+                    <button class="btn danger" onclick="deleteCurrentNovel()"><i class="fa-solid fa-trash"></i> 删除</button>
+                    <button class="btn" onclick="clearEditor()"><i class="fa-solid fa-eraser"></i> 清空</button>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <button onclick="formatBold()" title="加粗"><b>B</b></button>
+                <button onclick="formatItalic()" title="斜体"><i>I</i></button>
+                <button onclick="formatUnderline()" title="下划线"><u>U</u></button>
+                <button onclick="formatStrike()" title="删除线"><s>S</s></button>
+                <button onclick="formatH1()">H1</button>
+                <button onclick="formatH2()">H2</button>
+                <button onclick="formatH3()">H3</button>
+                <button onclick="listOrder()">有序</button>
+                <button onclick="listUnorder()">无序</button>
+                <button onclick="alignLeft()">左对齐</button>
+                <button onclick="alignCenter()">居中</button>
+                <button onclick="alignRight()">右对齐</button>
+                <button onclick="clearFormat()">清格式</button>
+                <button onclick="clearBlankLine()">去空行</button>
+                <button onclick="clearSpace()">去空格</button>
+                <button onclick="halfFull()">全半角</button>
+                <button onclick="punctSwap()">标点互换</button>
+                <button onclick="upperLower()">大小写</button>
+                <button onclick="openConvertModal()">繁简</button>
+                <button onclick="findReplace()">查找替换</button>
+                <button onclick="copyPure()">复制文本</button>
+                <button onclick="exportTxt()">导出TXT</button>
+            </div>
+
+            <div class="edit-split">
+                <textarea id="mdInput" placeholder="在此编写小说内容，支持Markdown语法... 晚风寄星河，梧萌赴山海 ✨" oninput="updatePreview()"></textarea>
+                <div id="mdPreview"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 元信息面板 -->
+    <div class="meta-panel">
+        <h3><i class="fa-solid fa-circle-info"></i> 章节元信息</h3>
+        <div class="meta-row">
+            <div class="meta-item">
+                <label>章节标题</label>
+                <input id="metaTitle" placeholder="章节标题" oninput="autoUpdateCommit()">
+            </div>
+            <div class="meta-item">
+                <label>作者</label>
+                <input id="metaAuthor" placeholder="作者名">
+            </div>
+            <div class="meta-item">
+                <label>所属书籍</label>
+                <select id="metaBook">
+                    <option value="未分类">未分类</option>
+                </select>
+            </div>
+        </div>
+        <div class="meta-row">
+            <div class="meta-item">
+                <label>提交备注</label>
+                <input id="commitMsg" placeholder="自动生成中...">
+            </div>
+        </div>
+    </div>
+
+    <!-- 书籍管理主弹窗 -->
+    <div class="modal" id="bookManagerModal">
+        <div class="modal-box" style="max-width:720px">
+            <button class="modal-close" onclick="closeBookManager()">×</button>
+            <h3><i class="fa-solid fa-book"></i> 书籍管理中心</h3>
+            <div class="sort-tabs">
+                <div class="sort-tab active" data-tab="bookManage" onclick="switchBookTab(this)">书籍管理</div>
+                <div class="sort-tab" data-tab="chapterSort" onclick="switchBookTab(this)">章节排序</div>
+            </div>
+
+            <div class="sort-content active" id="bookManageContent">
+                <div style="margin-bottom:14px;color:var(--sub);font-size:0.9rem">全功能书籍管理：新建、重命名、删除、调整首页展示顺序</div>
+                <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn primary" onclick="openCreateBookModal()"><i class="fa-solid fa-plus"></i> 新建书籍</button>
+                    <button class="btn" onclick="syncSortFiles()"><i class="fa-solid fa-rotate"></i> 同步仓库文件</button>
+                    <button class="btn primary" onclick="saveSortConfig()"><i class="fa-solid fa-floppy-disk"></i> 保存排序</button>
+                </div>
+                <div id="bookManageList" style="max-height:380px;overflow-y:auto;padding-right:6px"></div>
+            </div>
+
+            <div class="sort-content" id="chapterSortContent">
+                <div class="chapter-sort-tip">先选择书籍，再调整该书内章节的先后顺序</div>
+                <select id="sortBookSelect" style="padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);margin-bottom:14px;width:100%" onchange="renderChapterSortList()">
+                    <option value="">请选择书籍</option>
+                </select>
+                <div id="chapterSortList" style="max-height:350px;overflow-y:auto;padding-right:6px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建书籍子弹窗 -->
+    <div class="modal" id="createBookModal">
+        <div class="modal-box" style="max-width:480px">
+            <button class="modal-close" onclick="closeCreateBookModal()">×</button>
+            <h3><i class="fa-solid fa-book-medical"></i> 创建新书籍</h3>
+            <label>书籍名称</label>
+            <input id="newBookName" placeholder="请输入新书籍名称">
+            <label>第一章标题（可选，留空则创建序言）</label>
+            <input id="newBookFirstChapter" placeholder="例如：第一章 初遇">
+            <div class="modal-tip">提示：创建后自动跳转至章节编辑，保存后书籍正式生效</div>
+            <div style="display:flex;gap:10px;margin-top:14px">
+                <button class="btn primary" style="flex:1" onclick="createBook()">创建并开始写作</button>
+                <button class="btn" style="flex:1" onclick="closeCreateBookModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 繁简转换弹窗 -->
+    <div class="modal" id="convertModal">
+        <div class="modal-box" style="max-width:500px">
+            <button class="modal-close" onclick="closeConvertModal()">×</button>
+            <h3><i class="fa-solid fa-language"></i> 简繁文字转换</h3>
+            <label>转换方向</label>
+            <select id="convertType">
+                <option value="1">简体 → 繁体</option>
+                <option value="2">繁体 → 简体</option>
+            </select>
+            <label>转换内容（默认填充选中文本，最多1000字）</label>
+            <textarea id="convertContent"></textarea>
+            <div id="convertTip" class="modal-tip"></div>
+            <div style="display:flex;gap:10px;margin-top:14px">
+                <button class="btn primary" style="flex:1" onclick="runConvert()">执行转换</button>
+                <button class="btn" style="flex:1" onclick="insertConvertResult()">插入到编辑器</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Token设置弹窗 -->
+    <div class="modal" id="tokenModal">
+        <div class="modal-box" style="max-width:520px">
+            <button class="modal-close" onclick="closeTokenModal()">×</button>
+            <h3><i class="fa-solid fa-key"></i> GitHub 令牌设置</h3>
+            <div class="modal-tip" style="margin-bottom:14px">
+                令牌仅保存在你的浏览器本地（localStorage），不会上传到任何服务器。
+                需要拥有 <code>repo</code> 权限的 Personal Access Token。
+            </div>
+            <label>GitHub Personal Access Token</label>
+            <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx 或 github_pat_xxxxxxxxxxxx">
+            <div id="tokenTip" class="modal-tip"></div>
+            <div style="display:flex;gap:10px;margin-top:14px">
+                <button class="btn primary" style="flex:1" onclick="saveToken()"><i class="fa-solid fa-floppy-disk"></i> 保存令牌</button>
+                <button class="btn" style="flex:1" onclick="clearToken()"><i class="fa-solid fa-trash"></i> 清除令牌</button>
+                <button class="btn" style="flex:1" onclick="closeTokenModal()">取消</button>
+            </div>
+            <div class="modal-tip" style="margin-top:14px;font-size:0.8rem">
+                <a href="https://github.com/settings/tokens/new?scopes=repo&description=Cloudpad%20Novel%20Editor" target="_blank" style="color:var(--accent)">
+                    <i class="fa-solid fa-external-link-alt"></i> 点击此处生成新令牌（勾选 repo 权限）
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        技术支持：云笺编辑器 · <a href="https://youreln.github.io/Cloudpad/" target="_blank">前往在线版</a>
+        <div class="novel-info">「晚风寄星河，梧萌赴山海」— 林中梧 & 翁婧 的故事永不停更</div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ===================== 全局配置 =====================
+const CONFIG = {
+    GH_USER: "Youreln",
+    GH_REPO: "novel",
+    GH_BRANCH: "main",
+    get GH_TOKEN() { return localStorage.getItem("cloudpad_gh_token") || ""; },
+    API_BASE: "https://api.github.com",
+    RAW_BASE: "https://raw.githubusercontent.com/Youreln/novel/main",
+    CDN_BASE: "https://cdn.jsdelivr.net/gh/Youreln/novel@main/",
+    SORT_PATH: "novel/sort.json",
+    CONVERT_API: "https://cn.apihz.cn/api/zici/jfzh.php",
+    CONVERT_ID: "88888888",
+    CONVERT_KEY: "88888888",
+    META_REG: /<!-- ZW_META:\s*(\{[\s\S]*?\})\s* -->/,
+    FILE_REG: /\.(md|txt)$/i
+};
+
+let repoTree = [];
+let allNovelFiles = [];
+let fileShaMap = {};
+let currentFilePath = "";
+let currentFileSha = "";
+let sortOrder = [];
+let bookList = ["未分类"];
+let convertResultText = "";
+let originalFile = { title: "", author: "", book: "", content: "" };
+
+const $ = id => document.getElementById(id);
+const fileTreeEl = $("fileTree");
+const mdInput = $("mdInput");
+const mdPreview = $("mdPreview");
+const currentPathEl = $("currentFilePath");
+const metaTitle = $("metaTitle");
+const metaAuthor = $("metaAuthor");
+const metaBook = $("metaBook");
+const commitMsg = $("commitMsg");
+const toastEl = $("toast");
+
+// ===================== 进度条控制 =====================
+function showProgress() {
+    $("progressBar").classList.add("show");
+}
+function hideProgress() {
+    $("progressBar").classList.remove("show");
+}
+
+// ===================== 通用工具 =====================
+function showToast(msg, type="success") {
+    const icon = type === "success" ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-exclamation"></i>';
+    toastEl.innerHTML = icon + " " + msg;
+    toastEl.className = `toast ${type} show`;
+    setTimeout(()=>toastEl.classList.remove("show"), 3500);
+}
+
+function encodePath(p) { return encodeURI(p) }
+
+function base64Encode(str) {
+    try { return btoa(unescape(encodeURIComponent(str))) }
+    catch(e) { return btoa(str) }
+}
+
+function base64Decode(str) {
+    const clean = str.replace(/\s/g, '');
+    try { return decodeURIComponent(escape(atob(clean))) }
+    catch(e) { return atob(clean) }
+}
+
+function getBookName(path) {
+    const clean = path.replace(/^novel\//, "");
+    const parts = clean.split("/");
+    return parts.length >= 2 ? parts[0] : "未分类";
+}
+
+function replaceBookInPath(path, oldBook, newBook) {
+    return path.replace(`novel/${oldBook}/`, `novel/${newBook}/`);
+}
+
+function hashContent(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return hash;
+}
+
+// ===================== 主题切换 =====================
+function setTheme(theme, btn) {
+    document.body.dataset.theme = theme;
+    localStorage.setItem("editor_theme", theme);
+    document.querySelectorAll(".theme-btn").forEach(b=>b.classList.remove("active"));
+    if(btn) btn.classList.add("active");
+}
+
+// ===================== 仓库文件树 =====================
+async function fetchRepoTree() {
+    showProgress();
+    try {
+        const url = `${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/git/trees/${CONFIG.GH_BRANCH}?recursive=1`;
+        const res = await fetch(url, {
+            headers: {
+                "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                "Accept": "application/vnd.github+json"
+            }
+        });
+        if(!res.ok) throw new Error("获取仓库文件失败");
+        const data = await res.json();
+        repoTree = data.tree || [];
+
+        allNovelFiles = [];
+        fileShaMap = {};
+        const bookSet = new Set(["未分类"]);
+
+        repoTree.forEach(item=>{
+            const path = item.path;
+            const name = path.split("/").pop();
+            if(item.type==="blob" && path.startsWith("novel/") && !name.startsWith(".") && CONFIG.FILE_REG.test(name) && name!=="sort.json") {
+                allNovelFiles.push(path);
+                fileShaMap[path] = item.sha;
+                bookSet.add(getBookName(path));
+            }
+        });
+
+        bookList = [...bookSet];
+        updateBookSelect();
+        renderFileTree();
+        return true;
+    } catch(e) {
+        showToast("加载仓库失败："+e.message, "error");
+        return false;
+    } finally {
+        hideProgress();
+    }
+}
+
+function updateBookSelect() {
+    metaBook.innerHTML = "";
+    bookList.forEach(book=>{
+        const opt = document.createElement("option");
+        opt.value = book;
+        opt.textContent = book;
+        metaBook.appendChild(opt);
+    });
+    const sortSelect = $("sortBookSelect");
+    if(sortSelect) {
+        sortSelect.innerHTML = '<option value="">请选择书籍</option>';
+        bookList.filter(b=>b!=="未分类").forEach(book=>{
+            const opt = document.createElement("option");
+            opt.value = book;
+            opt.textContent = book;
+            sortSelect.appendChild(opt);
+        });
+    }
+}
+
+function renderFileTree() {
+    fileTreeEl.innerHTML = "";
+    const bookMap = {};
+    allNovelFiles.forEach(path=>{
+        const book = getBookName(path);
+        if(!bookMap[book]) bookMap[book] = [];
+        bookMap[book].push(path);
+    });
+
+    Object.keys(bookMap).sort().forEach(book=>{
+        const dir = document.createElement("div");
+        dir.className = "book-dir";
+        const bookIcon = book.includes("外传") ? "fa-book-bookmark" : "fa-book";
+        dir.innerHTML = `
+            <div class="book-title">
+                <i class="fa-solid fa-caret-right"></i>
+                <i class="fa-solid ${bookIcon} book-icon"></i> ${book}
+            </div>
+        `;
+        dir.querySelector(".book-title").onclick = () => dir.classList.toggle("open");
+
+        const chapterWrap = document.createElement("div");
+        chapterWrap.className = "chapter-list";
+        bookMap[book].forEach(path=>{
+            const name = path.split("/").pop();
+            const item = document.createElement("div");
+            item.className = "chapter-file";
+            item.textContent = name;
+            item.onclick = ()=>loadNovelFile(path);
+            if(path === currentFilePath) item.classList.add("active");
+            chapterWrap.appendChild(item);
+        });
+        dir.appendChild(chapterWrap);
+        fileTreeEl.appendChild(dir);
+    });
+}
+
+function refreshFileTree() {
+    fetchRepoTree();
+    showToast("已刷新文件列表");
+}
+
+// ===================== 小说加载/保存/删除 =====================
+async function loadNovelFile(path) {
+    showProgress();
+    currentFilePath = path;
+    currentFileSha = fileShaMap[path] || "";
+    currentPathEl.innerHTML = '<i class="fa-solid fa-file-lines"></i> ' + path;
+
+    try {
+        const url = `${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${encodePath(path)}`;
+        const res = await fetch(url, {
+            headers: {
+                "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                "Accept": "application/vnd.github.raw"
+            }
+        });
+        if(!res.ok) throw new Error("文件读取失败");
+        const text = await res.text();
+
+        const metaMatch = text.match(CONFIG.META_REG);
+        if(metaMatch) {
+            try {
+                const meta = JSON.parse(metaMatch[1]);
+                metaTitle.value = meta.title || "";
+                metaAuthor.value = meta.author || "";
+                metaBook.value = meta.book || "未分类";
+            } catch(e) {}
+            const content = text.replace(CONFIG.META_REG, "").trim();
+            mdInput.value = content;
+            originalFile = {
+                title: metaTitle.value,
+                author: metaAuthor.value,
+                book: metaBook.value,
+                content: content
+            };
+        } else {
+            const name = path.split("/").pop().replace(CONFIG.FILE_REG, "");
+            metaTitle.value = name;
+            metaAuthor.value = "";
+            metaBook.value = getBookName(path);
+            mdInput.value = text;
+            originalFile = {
+                title: name,
+                author: "",
+                book: getBookName(path),
+                content: text
+            };
         }
 
-        function exportNovel(type) {
-            const title = document.getElementById('novel-title').value.trim() || '未命名小说';
-            const author = document.getElementById('novel-author').value.trim() || '未知作者';
-            const content = document.getElementById('novel-content').value;
-            const prefs = getPrefs();
-            
-            // 注入元数据
-            const metaData = { ...prefs, title, author };
-            const metaStr = `<!-- ZW_META:${JSON.stringify(metaData)} -->\n`;
-            
-            let finalContent = '', mime = '';
-            if (type === 'txt') {
-                finalContent = metaStr + `《${title}》\n作者：${author}\n\n${content}`;
-                mime = 'text/plain';
-            } else if (type === 'md') {
-                finalContent = metaStr + `# 《${title}》\n**作者**：${author}\n\n${content}`;
-                mime = 'text/markdown';
-            } else {
-                finalContent = metaStr + `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title></head><body><h1>《${title}》</h1><p>作者：${author}</p><div>${content.replace(/\n/g, '<br>')}</div></body></html>`;
-                mime = 'text/html';
+        autoUpdateCommit();
+        updatePreview();
+        renderFileTree();
+        showToast("文件加载成功");
+    } catch(e) {
+        showToast("加载失败："+e.message, "error");
+    } finally {
+        hideProgress();
+    }
+}
+
+function generateMeta() {
+    const meta = {
+        title: metaTitle.value.trim(),
+        author: metaAuthor.value.trim(),
+        book: metaBook.value
+    };
+    return `<!-- ZW_META:${JSON.stringify(meta)} -->\n\n`;
+}
+
+function autoUpdateCommit() {
+    const newTitle = metaTitle.value.trim() || "未命名";
+    const newBook = metaBook.value;
+    const newContent = mdInput.value;
+    const isNew = !currentFileSha;
+
+    if (isNew) {
+        commitMsg.value = `新增章节：《${newTitle}》（${newBook}）`;
+        return;
+    }
+
+    const changes = [];
+    if (newTitle !== originalFile.title) {
+        changes.push(`重命名：《${originalFile.title}》→《${newTitle}》`);
+    }
+    if (newBook !== originalFile.book) {
+        changes.push(`移至：${originalFile.book} → ${newBook}`);
+    }
+    if (hashContent(newContent) !== hashContent(originalFile.content)) {
+        changes.push("内容修订");
+    }
+
+    if (changes.length === 0) {
+        commitMsg.value = `更新章节：《${newTitle}》`;
+    } else {
+        commitMsg.value = `更新《${newTitle}》：${changes.join("，")}`;
+    }
+}
+
+async function saveNovel() {
+    const title = metaTitle.value.trim();
+    if(!title) return showToast("请填写章节标题", "error");
+
+    showProgress();
+    const book = metaBook.value;
+    const fileName = `${title}.md`;
+    const savePath = book === "未分类" ? `novel/${fileName}` : `novel/${book}/${fileName}`;
+    const fullContent = generateMeta() + mdInput.value;
+    const b64 = base64Encode(fullContent);
+
+    try {
+        let sha = currentFileSha;
+        if(!sha && fileShaMap[savePath]) sha = fileShaMap[savePath];
+
+        const body = {
+            message: commitMsg.value || "更新小说",
+            content: b64,
+            branch: CONFIG.GH_BRANCH
+        };
+        if(sha) body.sha = sha;
+
+        if(currentFilePath && currentFilePath !== savePath && fileShaMap[currentFilePath]) {
+            await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${encodePath(currentFilePath)}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/vnd.github+json"
+                },
+                body: JSON.stringify({
+                    message: `重命名删除旧文件 ${currentFilePath}`,
+                    sha: fileShaMap[currentFilePath],
+                    branch: CONFIG.GH_BRANCH
+                })
+            });
+        }
+
+        const res = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${encodePath(savePath)}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.github+json"
+            },
+            body: JSON.stringify(body)
+        });
+
+        if(!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || "保存失败，请检查Token权限");
+        }
+
+        const data = await res.json();
+        currentFilePath = savePath;
+        currentFileSha = data.content.sha;
+        fileShaMap[savePath] = data.content.sha;
+        originalFile = {
+            title: metaTitle.value.trim(),
+            author: metaAuthor.value.trim(),
+            book: metaBook.value,
+            content: mdInput.value
+        };
+
+        await fetchRepoTree();
+        if($("bookManagerModal").style.display === "flex") {
+            renderBookManageList();
+        }
+        showToast("保存成功，已同步到仓库");
+    } catch(e) {
+        showToast("保存失败："+e.message, "error");
+    } finally {
+        hideProgress();
+    }
+}
+
+async function deleteCurrentNovel() {
+    if(!currentFilePath) return showToast("请先选择要删除的章节", "error");
+    if(!confirm(`确定永久删除 ${currentFilePath}？此操作不可恢复`)) return;
+
+    showProgress();
+    try {
+        const sha = fileShaMap[currentFilePath];
+        const res = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${encodePath(currentFilePath)}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.github+json"
+            },
+            body: JSON.stringify({
+                message: `删除章节 ${currentFilePath}`,
+                sha: sha,
+                branch: CONFIG.GH_BRANCH
+            })
+        });
+        if(!res.ok) throw new Error("删除失败");
+
+        currentFilePath = "";
+        currentFileSha = "";
+        currentPathEl.innerHTML = '<i class="fa-solid fa-file-lines"></i> 未选择文件';
+        mdInput.value = "";
+        mdPreview.innerHTML = "";
+        metaTitle.value = "";
+        metaAuthor.value = "";
+        originalFile = { title: "", author: "", book: "", content: "" };
+
+        await fetchRepoTree();
+        if($("bookManagerModal").style.display === "flex") {
+            renderBookManageList();
+        }
+        showToast("删除成功");
+    } catch(e) {
+        showToast("删除失败："+e.message, "error");
+    } finally {
+        hideProgress();
+    }
+}
+
+function createNewNovel() {
+    currentFilePath = "";
+    currentFileSha = "";
+    currentPathEl.innerHTML = '<i class="fa-solid fa-file-pen"></i> 新建章节';
+    mdInput.value = "";
+    mdPreview.innerHTML = "";
+    metaTitle.value = "";
+    metaAuthor.value = "";
+    originalFile = { title: "", author: "", book: metaBook.value, content: "" };
+    commitMsg.value = "新增章节";
+    renderFileTree();
+    showToast("已清空，开始创作新章节");
+}
+
+function clearEditor() {
+    if(confirm("确定清空编辑器内容？")) {
+        mdInput.value = "";
+        autoUpdateCommit();
+        updatePreview();
+    }
+}
+
+// ===================== 书籍管理中心 =====================
+function openBookManager() {
+    $("bookManagerModal").style.display = "flex";
+    loadSortConfig().then(() => {
+        renderBookManageList();
+    });
+}
+
+function closeBookManager() {
+    $("bookManagerModal").style.display = "none";
+}
+
+function switchBookTab(btn) {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll("#bookManagerModal .sort-tab").forEach(t=>t.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll("#bookManagerModal .sort-content").forEach(c=>c.classList.remove("active"));
+    $(tab === "bookManage" ? "bookManageContent" : "chapterSortContent").classList.add("active");
+    if(tab === "chapterSort") updateBookSelect();
+}
+
+function openCreateBookModal() {
+    $("newBookName").value = "";
+    $("newBookFirstChapter").value = "";
+    $("createBookModal").style.display = "flex";
+}
+
+function closeCreateBookModal() {
+    $("createBookModal").style.display = "none";
+}
+
+function createBook() {
+    const bookName = $("newBookName").value.trim();
+    if (!bookName) return showToast("请输入书籍名称", "error");
+    if (bookList.includes(bookName)) return showToast("该书籍已存在", "error");
+
+    const chapterTitle = $("newBookFirstChapter").value.trim() || "序言";
+
+    closeCreateBookModal();
+
+    currentFilePath = "";
+    currentFileSha = "";
+    currentPathEl.innerHTML = `<i class="fa-solid fa-book-open"></i> 新建书籍：${bookName} / ${chapterTitle}`;
+    metaTitle.value = chapterTitle;
+    metaAuthor.value = "";
+
+    if (!bookList.includes(bookName)) {
+        bookList.push(bookName);
+        updateBookSelect();
+    }
+    metaBook.value = bookName;
+
+    mdInput.value = "";
+    originalFile = { title: chapterTitle, author: "", book: bookName, content: "" };
+    autoUpdateCommit();
+    updatePreview();
+
+    if($("bookManagerModal").style.display === "flex") {
+        renderBookManageList();
+    }
+
+    showToast(`已创建新书《${bookName}》，编辑完成后点击「保存到仓库」即可生效`);
+}
+
+function getSortedBookList() {
+    const totalMap = {};
+    allNovelFiles.forEach(path => {
+        const book = getBookName(path);
+        totalMap[book] = (totalMap[book] || 0) + 1;
+    });
+
+    const sortedMap = {};
+    const firstIndexMap = {};
+    sortOrder.forEach((path, idx) => {
+        if(!allNovelFiles.includes(path)) return;
+        const book = getBookName(path);
+        if(!sortedMap[book]) {
+            sortedMap[book] = 0;
+            firstIndexMap[book] = idx;
+        }
+        sortedMap[book]++;
+    });
+
+    const allBooks = [...new Set([...Object.keys(totalMap), ...Object.keys(sortedMap)])];
+    return allBooks.map(name => ({
+        name,
+        total: totalMap[name] || 0,
+        sorted: sortedMap[name] || 0,
+        firstIndex: firstIndexMap[name] ?? Infinity
+    })).sort((a,b) => a.firstIndex - b.firstIndex);
+}
+
+function renderBookManageList() {
+    const listEl = $("bookManageList");
+    listEl.innerHTML = "";
+
+    const bookListData = getSortedBookList();
+
+    bookListData.forEach((book, idx) => {
+        const item = document.createElement("div");
+        item.className = "sort-book-item";
+        const safeName = book.name.replace(/'/g, "\\'");
+        const isDefault = book.name === "未分类";
+        const bookIcon = book.name.includes("外传") ? "📖" : "📚";
+
+        item.innerHTML = `
+            <span class="sort-item-name">
+                ${idx+1}. ${bookIcon} ${book.name}（${book.total} 章）
+                ${isDefault ? '<span style="font-size:0.75rem;color:var(--sub);margin-left:8px">默认分类</span>' : ''}
+            </span>
+            <div class="sort-item-actions">
+                <button onclick="moveBook(${idx}, -1)">上移</button>
+                <button onclick="moveBook(${idx}, 1)">下移</button>
+                <button onclick="renameBook('${safeName}')" ${isDefault ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>重命名</button>
+                <button class="btn-del" onclick="deleteBook('${safeName}')" ${isDefault ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>删除</button>
+            </div>
+        `;
+        listEl.appendChild(item);
+    });
+}
+
+function moveBook(index, direction) {
+    const bookList = getSortedBookList();
+    const targetIdx = index + direction;
+
+    if(targetIdx < 0 || targetIdx >= bookList.length) return;
+
+    const bookName = bookList[index].name;
+    const targetBookName = bookList[targetIdx].name;
+
+    [bookName, targetBookName].forEach(book => {
+        const hasBook = sortOrder.some(p => allNovelFiles.includes(p) && getBookName(p) === book);
+        if(!hasBook) {
+            const bookFiles = allNovelFiles.filter(p => getBookName(p) === book);
+            sortOrder.push(...bookFiles);
+        }
+    });
+
+    const getBookPaths = (name) => {
+        return sortOrder.filter(p => allNovelFiles.includes(p) && getBookName(p) === name);
+    };
+
+    const newBookList = [...bookList];
+    [newBookList[index], newBookList[targetIdx]] = [newBookList[targetIdx], newBookList[index]];
+
+    const newOrder = [];
+    newBookList.forEach(book => {
+        const paths = getBookPaths(book.name);
+        if(paths.length === 0) {
+            newOrder.push(...allNovelFiles.filter(p => getBookName(p) === book.name));
+        } else {
+            newOrder.push(...paths);
+        }
+    });
+
+    sortOrder = newOrder;
+
+    renderBookManageList();
+    const selectedBook = $("sortBookSelect").value;
+    if(selectedBook) renderChapterSortList();
+}
+
+async function renameBook(oldName) {
+    if(oldName === "未分类") return showToast("未分类书籍无法重命名", "error");
+
+    const newName = prompt(`请输入「${oldName}」的新书名：`, oldName);
+    if(!newName || newName.trim() === oldName) return;
+
+    const newNameTrim = newName.trim();
+    if(!newNameTrim) return showToast("书名不能为空", "error");
+    if(bookList.includes(newNameTrim)) return showToast("该书名已存在", "error");
+
+    if(!confirm(`确定将「${oldName}」重命名为「${newNameTrim}」？\n将批量移动所有章节文件并更新元信息与排序配置`)) return;
+
+    showProgress();
+    showToast("正在批量重命名，请稍候...");
+
+    try {
+        const bookFiles = allNovelFiles.filter(p => getBookName(p) === oldName);
+        if(bookFiles.length === 0) throw new Error("未找到该书的章节文件");
+
+        for (const oldPath of bookFiles) {
+            const newPath = replaceBookInPath(oldPath, oldName, newNameTrim);
+
+            const res = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${encodePath(oldPath)}`, {
+                headers: {
+                    "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                    "Accept": "application/vnd.github.raw"
+                }
+            });
+            if(!res.ok) throw new Error(`读取文件失败：${oldPath}`);
+            let content = await res.text();
+
+            if(CONFIG.META_REG.test(content)) {
+                content = content.replace(CONFIG.META_REG, (match, metaStr) => {
+                    try {
+                        const meta = JSON.parse(metaStr);
+                        meta.book = newNameTrim;
+                        return `<!-- ZW_META:${JSON.stringify(meta)} -->`;
+                    } catch(e) {
+                        return match;
+                    }
+                });
             }
 
-            const blob = new Blob([finalContent], { type: `${mime};charset=utf-8` });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `${title}.${type}`;
-            a.click();
+            const b64 = base64Encode(content);
+            const sha = fileShaMap[oldPath];
+
+            const putRes = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${encodePath(newPath)}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/vnd.github+json"
+                },
+                body: JSON.stringify({
+                    message: `书籍重命名：${oldName} → ${newNameTrim}`,
+                    content: b64,
+                    branch: CONFIG.GH_BRANCH
+                })
+            });
+            if(!putRes.ok) throw new Error(`创建新文件失败：${newPath}`);
+
+            const delRes = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${encodePath(oldPath)}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/vnd.github+json"
+                },
+                body: JSON.stringify({
+                    message: `书籍重命名删除旧文件：${oldName}`,
+                    sha: sha,
+                    branch: CONFIG.GH_BRANCH
+                })
+            });
+            if(!delRes.ok) throw new Error(`删除旧文件失败：${oldPath}`);
+
+            if(currentFilePath === oldPath) {
+                currentFilePath = newPath;
+                currentPathEl.innerHTML = '<i class="fa-solid fa-file-lines"></i> ' + newPath;
+                metaBook.value = newNameTrim;
+                originalFile.book = newNameTrim;
+            }
         }
-    </script>
+
+        sortOrder = sortOrder.map(p => replaceBookInPath(p, oldName, newNameTrim));
+
+        const sortContent = JSON.stringify({ order: sortOrder }, null, 2);
+        const sortB64 = base64Encode(sortContent);
+        let sortSha = null;
+        try {
+            const sortRes = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.SORT_PATH}`, {
+                headers: {
+                    "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                    "Accept": "application/vnd.github+json"
+                }
+            });
+            if(sortRes.ok) {
+                const data = await sortRes.json();
+                sortSha = data.sha;
+            }
+        } catch(e) {}
+
+        const sortBody = {
+            message: `书籍重命名更新排序：${oldName} → ${newNameTrim}`,
+            content: sortB64,
+            branch: CONFIG.GH_BRANCH
+        };
+        if(sortSha) sortBody.sha = sortSha;
+
+        await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.SORT_PATH}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.github+json"
+            },
+            body: JSON.stringify(sortBody)
+        });
+
+        await fetchRepoTree();
+        renderBookManageList();
+        renderChapterSortList();
+        updateBookSelect();
+
+        showToast(`重命名成功：${oldName} → ${newNameTrim}`);
+    } catch(e) {
+        showToast("重命名失败：" + e.message, "error");
+        await fetchRepoTree();
+        renderBookManageList();
+    } finally {
+        hideProgress();
+    }
+}
+
+async function deleteBook(bookName) {
+    if(bookName === "未分类") return showToast("未分类书籍无法删除", "error");
+
+    const bookFiles = allNovelFiles.filter(p => getBookName(p) === bookName);
+    if(!confirm(`确定永久删除书籍「${bookName}」？\n该书共 ${bookFiles.length} 个章节文件将被全部删除，且无法恢复！`)) return;
+
+    showProgress();
+    showToast("正在删除书籍，请稍候...");
+
+    try {
+        if(bookFiles.length === 0) throw new Error("未找到该书的章节文件");
+
+        for (const filePath of bookFiles) {
+            const sha = fileShaMap[filePath];
+            const res = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${encodePath(filePath)}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/vnd.github+json"
+                },
+                body: JSON.stringify({
+                    message: `删除书籍：${bookName}，移除文件 ${filePath}`,
+                    sha: sha,
+                    branch: CONFIG.GH_BRANCH
+                })
+            });
+            if(!res.ok) throw new Error(`删除文件失败：${filePath}`);
+        }
+
+        sortOrder = sortOrder.filter(p => getBookName(p) !== bookName);
+
+        const sortContent = JSON.stringify({ order: sortOrder }, null, 2);
+        const sortB64 = base64Encode(sortContent);
+        let sortSha = null;
+        try {
+            const sortRes = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.SORT_PATH}`, {
+                headers: {
+                    "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                    "Accept": "application/vnd.github+json"
+                }
+            });
+            if(sortRes.ok) {
+                const data = await sortRes.json();
+                sortSha = data.sha;
+            }
+        } catch(e) {}
+
+        const sortBody = {
+            message: `删除书籍更新排序：移除 ${bookName}`,
+            content: sortB64,
+            branch: CONFIG.GH_BRANCH
+        };
+        if(sortSha) sortBody.sha = sortSha;
+
+        await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.SORT_PATH}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.github+json"
+            },
+            body: JSON.stringify(sortBody)
+        });
+
+        if(currentFilePath && getBookName(currentFilePath) === bookName) {
+            currentFilePath = "";
+            currentFileSha = "";
+            currentPathEl.innerHTML = '<i class="fa-solid fa-file-lines"></i> 未选择文件';
+            mdInput.value = "";
+            mdPreview.innerHTML = "";
+            metaTitle.value = "";
+            metaAuthor.value = "";
+            originalFile = { title: "", author: "", book: "", content: "" };
+            commitMsg.value = "";
+        }
+
+        await fetchRepoTree();
+        renderBookManageList();
+        renderChapterSortList();
+        updateBookSelect();
+
+        showToast(`书籍「${bookName}」已成功删除`);
+    } catch(e) {
+        showToast("删除失败：" + e.message, "error");
+        await fetchRepoTree();
+        renderBookManageList();
+    } finally {
+        hideProgress();
+    }
+}
+
+// ===================== 章节排序 =====================
+function renderChapterSortList() {
+    const bookName = $("sortBookSelect").value;
+    const listEl = $("chapterSortList");
+    listEl.innerHTML = "";
+
+    if(!bookName) return;
+
+    const bookChapters = sortOrder.filter(path =>
+        allNovelFiles.includes(path) && getBookName(path) === bookName
+    );
+
+    if(bookChapters.length === 0) {
+        listEl.innerHTML = '<div style="color:var(--sub);text-align:center;padding:20px">该书暂无已排序章节，请点击「同步仓库文件」</div>';
+        return;
+    }
+
+    bookChapters.forEach((path, idx)=>{
+        const name = path.split("/").pop();
+        const item = document.createElement("div");
+        item.className = "sort-chapter-item";
+        item.innerHTML = `
+            <span class="sort-item-name">${idx+1}. 📄 ${name}</span>
+            <div class="sort-item-actions">
+                <button onclick="moveChapter('${bookName}', ${idx}, -1)">上移</button>
+                <button onclick="moveChapter('${bookName}', ${idx}, 1)">下移</button>
+            </div>
+        `;
+        listEl.appendChild(item);
+    });
+}
+
+function moveChapter(bookName, index, direction) {
+    const chapterPaths = sortOrder.filter(path =>
+        allNovelFiles.includes(path) && getBookName(path) === bookName
+    );
+
+    const targetIdx = index + direction;
+    if(targetIdx < 0 || targetIdx >= chapterPaths.length) return;
+
+    const i = sortOrder.indexOf(chapterPaths[index]);
+    const j = sortOrder.indexOf(chapterPaths[targetIdx]);
+
+    [sortOrder[i], sortOrder[j]] = [sortOrder[j], sortOrder[i]];
+
+    renderChapterSortList();
+    renderBookManageList();
+}
+
+async function syncSortFiles() {
+    if(allNovelFiles.length === 0) await fetchRepoTree();
+
+    const validPaths = [];
+    sortOrder.forEach(p=>{
+        if(allNovelFiles.includes(p) && !validPaths.includes(p)) validPaths.push(p);
+    });
+    allNovelFiles.forEach(p=>{
+        if(!validPaths.includes(p)) validPaths.push(p);
+    });
+
+    sortOrder = validPaths;
+    renderBookManageList();
+    showToast(`同步完成，共${validPaths.length}个有效文件`);
+}
+
+async function loadSortConfig() {
+    try {
+        const url = `${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.SORT_PATH}`;
+        const res = await fetch(url, {
+            headers: {
+                "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                "Accept": "application/vnd.github+json"
+            }
+        });
+        if(!res.ok) {
+            if(res.status === 404) {
+                throw new Error("sort.json不存在");
+            }
+            throw new Error("读取排序配置失败（请检查Token权限）");
+        }
+
+        const data = await res.json();
+        const content = base64Decode(data.content);
+        const json = JSON.parse(content);
+        sortOrder = Array.isArray(json.order) ? json.order : [];
+
+        renderBookManageList();
+        return true;
+    } catch(e) {
+        console.warn("读取排序配置失败，使用默认顺序：", e.message);
+        sortOrder = [];
+        syncSortFiles();
+        return false;
+    }
+}
+
+async function saveSortConfig() {
+    if(sortOrder.length === 0) return showToast("排序列表为空", "error");
+
+    showProgress();
+    const contentObj = { order: sortOrder };
+    const content = JSON.stringify(contentObj, null, 2);
+
+    try {
+        const b64 = base64Encode(content);
+        let sha = null;
+        try {
+            const res = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.SORT_PATH}`, {
+                headers: {
+                    "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                    "Accept": "application/vnd.github+json"
+                }
+            });
+            if(res.ok) {
+                const data = await res.json();
+                sha = data.sha;
+            }
+        } catch(e) {}
+
+        const body = {
+            message: "更新自定义排序sort.json",
+            content: b64,
+            branch: CONFIG.GH_BRANCH
+        };
+        if(sha) body.sha = sha;
+
+        const res = await fetch(`${CONFIG.API_BASE}/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.SORT_PATH}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${CONFIG.GH_TOKEN}`,
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.github+json"
+            },
+            body: JSON.stringify(body)
+        });
+
+        if(!res.ok) {
+            const err = await res.json();
+            if(res.status === 401) throw new Error("Token无效，请检查Token是否正确且拥有repo权限");
+            throw new Error(err.message || "保存失败");
+        }
+
+        setTimeout(async () => {
+            await loadSortConfig();
+            showToast("排序已保存到仓库，首页刷新生效");
+        }, 800);
+    } catch(e) {
+        console.log("sort.json 完整内容：\n" + content);
+        showToast("保存失败："+e.message + "，控制台已输出可复制的JSON", "error");
+    } finally {
+        hideProgress();
+    }
+}
+
+// ===================== 编辑器工具栏 =====================
+function updatePreview() {
+    mdPreview.innerHTML = marked.parse(mdInput.value || "");
+}
+
+function getSelection() {
+    const s = mdInput.selectionStart;
+    const e = mdInput.selectionEnd;
+    return { start:s, end:e, text: mdInput.value.slice(s,e) };
+}
+
+function insertText(start, end, newText) {
+    const all = mdInput.value;
+    mdInput.value = all.slice(0, start) + newText + all.slice(end);
+    mdInput.focus();
+    autoUpdateCommit();
+    updatePreview();
+}
+
+function formatBold() { const {start, end, text} = getSelection(); insertText(start, end, `**${text}**`); }
+function formatItalic() { const {start, end, text} = getSelection(); insertText(start, end, `*${text}*`); }
+function formatUnderline() { const {start, end, text} = getSelection(); insertText(start, end, `<u>${text}</u>`); }
+function formatStrike() { const {start, end, text} = getSelection(); insertText(start, end, `~~${text}~~`); }
+function formatH1() { const {start, end, text} = getSelection(); insertText(start, end, `# ${text}`); }
+function formatH2() { const {start, end, text} = getSelection(); insertText(start, end, `## ${text}`); }
+function formatH3() { const {start, end, text} = getSelection(); insertText(start, end, `### ${text}`); }
+function listOrder() {
+    const {start, end, text} = getSelection();
+    const lines = text.split("\n").map((l,i)=>`${i+1}. ${l}`).join("\n");
+    insertText(start, end, lines);
+}
+function listUnorder() {
+    const {start, end, text} = getSelection();
+    const lines = text.split("\n").map(l=>`- ${l}`).join("\n");
+    insertText(start, end, lines);
+}
+function alignLeft() { const {start, end, text} = getSelection(); insertText(start, end, `<div align="left">${text}</div>`); }
+function alignCenter() { const {start, end, text} = getSelection(); insertText(start, end, `<div align="center">${text}</div>`); }
+function alignRight() { const {start, end, text} = getSelection(); insertText(start, end, `<div align="right">${text}</div>`); }
+function clearFormat() {
+    let v = mdInput.value;
+    v = v.replace(/(\*\*|\*|~~|<u>|<\/u>|<div[^>]*>|<\/div>|#+\s)/g, "");
+    mdInput.value = v;
+    autoUpdateCommit();
+    updatePreview();
+}
+function clearBlankLine() { mdInput.value = mdInput.value.replace(/\n{3,}/g, "\n\n").trim(); autoUpdateCommit(); updatePreview(); }
+function clearSpace() { mdInput.value = mdInput.value.replace(/[ \t]+/g, " ").replace(/^ +/gm, ""); autoUpdateCommit(); updatePreview(); }
+function halfFull() {
+    const map = {
+        '０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9',
+        'ａ':'a','ｂ':'b','ｃ':'c','ｄ':'d','ｅ':'e','ｆ':'f','ｇ':'g','ｈ':'h','ｉ':'i','ｊ':'j',
+        'ｋ':'k','ｌ':'l','ｍ':'m','ｎ':'n','ｏ':'o','ｐ':'p','ｑ':'q','ｒ':'r','ｓ':'s','ｔ':'t',
+        'ｕ':'u','ｖ':'v','ｗ':'w','ｘ':'x','ｙ':'y','ｚ':'z',
+        'Ａ':'A','Ｂ':'B','Ｃ':'C','Ｄ':'D','Ｅ':'E','Ｆ':'F','Ｇ':'G','Ｈ':'H','Ｉ':'I','Ｊ':'J',
+        'Ｋ':'K','Ｌ':'L','Ｍ':'M','Ｎ':'N','Ｏ':'O','Ｐ':'P','Ｑ':'Q','Ｒ':'R','Ｓ':'S','Ｔ':'T',
+        'Ｕ':'U','Ｖ':'V','Ｗ':'W','Ｘ':'X','Ｙ':'Y','Ｚ':'Z'
+    };
+    let v = mdInput.value;
+    for(let k in map) v = v.replace(new RegExp(k,'g'), map[k]);
+    mdInput.value = v;
+    autoUpdateCommit();
+    updatePreview();
+}
+function punctSwap() {
+    const cn2en = {'，':',','。':'.','！':'!','？':'?','；':';','：':':','“':'"','”':'"','‘':"'","’":"'",'（':'(',"）":')','【':'[','】':']','《':'<','》':'>'};
+    let v = mdInput.value;
+    let isCn = /[，。！？]/.test(v.slice(0,100));
+    if(isCn) {
+        for(let k in cn2en) v = v.replace(new RegExp(k,'g'), cn2en[k]);
+    } else {
+        const en2cn = Object.fromEntries(Object.entries(cn2en).map(([k,v])=>[v,k]));
+        for(let k in en2cn) v = v.replace(new RegExp(k,'g'), en2cn[k]);
+    }
+    mdInput.value = v;
+    autoUpdateCommit();
+    updatePreview();
+}
+function upperLower() {
+    const sel = getSelection();
+    if(!sel.text) return;
+    const newText = sel.text === sel.text.toUpperCase() ? sel.text.toLowerCase() : sel.text.toUpperCase();
+    insertText(sel.start, sel.end, newText);
+}
+function findReplace() {
+    const find = prompt("查找内容：");
+    if(!find) return;
+    const replace = prompt("替换为：");
+    if(replace === null) return;
+    mdInput.value = mdInput.value.replaceAll(find, replace);
+    autoUpdateCommit();
+    updatePreview();
+    showToast("替换完成");
+}
+function copyPure() {
+    navigator.clipboard.writeText(mdInput.value).then(()=>{
+        showToast("已复制纯文本");
+    }).catch(()=>showToast("复制失败", "error"));
+}
+function exportTxt() {
+    const title = metaTitle.value || "小说";
+    const blob = new Blob([mdInput.value], {type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("导出成功");
+}
+
+// ===================== 繁简转换 =====================
+function openConvertModal() {
+    const sel = getSelection();
+    $("convertContent").value = sel.text || mdInput.value;
+    $("convertTip").textContent = "";
+    $("convertTip").className = "modal-tip";
+    $("convertModal").style.display = "flex";
+}
+function closeConvertModal() { $("convertModal").style.display = "none"; }
+
+async function runConvert() {
+    const type = $("convertType").value;
+    const words = $("convertContent").value.trim();
+    const tipEl = $("convertTip");
+
+    if(!words) { tipEl.textContent = "错误：转换内容不能为空"; tipEl.className = "modal-tip error"; return; }
+    if(words.length > 1000) { tipEl.textContent = `错误：内容共${words.length}字，超出1000字限制`; tipEl.className = "modal-tip error"; return; }
+
+    tipEl.textContent = "转换中...";
+    tipEl.className = "modal-tip";
+
+    try {
+        const params = new URLSearchParams({
+            id: CONFIG.CONVERT_ID,
+            key: CONFIG.CONVERT_KEY,
+            type: type,
+            words: words
+        });
+        const url = `${CONFIG.CONVERT_API}?${params.toString()}`;
+
+        const res = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch(e) { throw new Error("接口返回格式异常，请稍后重试"); }
+
+        if(data.code === 200 || data.words) {
+            convertResultText = data.words;
+            tipEl.textContent = "转换成功，点击「插入到编辑器」应用结果";
+            tipEl.className = "modal-tip success";
+        } else {
+            tipEl.textContent = "接口错误：" + (data.msg || data.message || "未知错误");
+            tipEl.className = "modal-tip error";
+        }
+    } catch(e) {
+        tipEl.textContent = "网络请求失败：" + e.message;
+        tipEl.className = "modal-tip error";
+    }
+}
+
+function insertConvertResult() {
+    if(!convertResultText) return showToast("请先执行转换", "error");
+    const sel = getSelection();
+    insertText(sel.start, sel.end, convertResultText);
+    closeConvertModal();
+    showToast("已插入转换结果");
+}
+
+// ===================== Token 管理 =====================
+function openTokenModal() {
+    $("tokenInput").value = localStorage.getItem("cloudpad_gh_token") || "";
+    $("tokenTip").textContent = "";
+    $("tokenTip").className = "modal-tip";
+    $("tokenModal").style.display = "flex";
+}
+function closeTokenModal() { $("tokenModal").style.display = "none"; }
+
+function saveToken() {
+    const token = $("tokenInput").value.trim();
+    const tipEl = $("tokenTip");
+    if(!token) { tipEl.textContent = "错误：令牌不能为空"; tipEl.className = "modal-tip error"; return; }
+    if(!(token.startsWith("ghp_") || token.startsWith("github_pat_") || token.startsWith("gho_") || token.startsWith("ghu_") || token.startsWith("ghs_"))) {
+        tipEl.textContent = "警告：令牌格式看起来不太对，请确认是否正确"; tipEl.className = "modal-tip error"; return;
+    }
+    localStorage.setItem("cloudpad_gh_token", token);
+    tipEl.textContent = "令牌已保存！正在重新加载仓库..."; tipEl.className = "modal-tip success";
+    setTimeout(async () => {
+        closeTokenModal();
+        await fetchRepoTree();
+        showToast("令牌已保存，仓库列表已刷新");
+    }, 800);
+}
+
+function clearToken() {
+    if(!confirm("确定清除已保存的 GitHub 令牌？清除后将无法读写仓库")) return;
+    localStorage.removeItem("cloudpad_gh_token");
+    $("tokenInput").value = "";
+    $("tokenTip").textContent = "令牌已清除";
+    $("tokenTip").className = "modal-tip success";
+    showToast("令牌已清除");
+}
+
+function checkToken() {
+    const token = localStorage.getItem("cloudpad_gh_token");
+    if(!token) {
+        showToast("请先点击右上角「令牌设置」配置 GitHub Token", "error");
+        setTimeout(() => openTokenModal(), 1000);
+        return false;
+    }
+    return true;
+}
+
+// ===================== 初始化 =====================
+window.onload = async () => {
+    const savedTheme = localStorage.getItem("editor_theme") || "sepia";
+    const themeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`);
+    setTheme(savedTheme, themeBtn);
+
+    const token = localStorage.getItem("cloudpad_gh_token");
+    if(token) {
+        await fetchRepoTree();
+    } else {
+        showToast("首次使用请配置 GitHub Token（点击右上角「令牌设置」）", "error");
+        setTimeout(() => openTokenModal(), 800);
+    }
+    updatePreview();
+
+    mdInput.addEventListener("input", autoUpdateCommit);
+    metaTitle.addEventListener("input", autoUpdateCommit);
+    metaAuthor.addEventListener("input", autoUpdateCommit);
+    metaBook.addEventListener("change", autoUpdateCommit);
+};
+
+document.addEventListener("click", e => {
+    if(e.target.classList.contains("modal")) {
+        e.target.style.display = "none";
+    }
+});
+</script>
 </body>
 </html>
